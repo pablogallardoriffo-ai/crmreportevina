@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Analítico de Solicitudes - Duoc UC</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -69,46 +69,51 @@
                 <h1 class="font-display font-black text-2xl text-duoc-blue dark:text-white leading-none tracking-tight">DUOC<span class="text-duoc-yellow">UC</span></h1>
                 <p class="text-xs font-semibold text-gray-400 mt-1 uppercase tracking-wider">Viña del Mar</p>
             </div>
-            <nav class="p-4 space-y-1 mt-2">
-                <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors tab-btn active bg-duoc-blue text-white shadow-md font-medium" data-target="dashboard">
+            <nav class="p-4 space-y-2 mt-2">
+                <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors tab-btn active bg-gray-100 dark:bg-gray-700 text-duoc-blue dark:text-white font-bold border-l-4 border-duoc-yellow" data-target="dashboard">
                     <i class="fa-solid fa-chart-pie w-5"></i> General
                 </button>
-                <button onclick="switchTab('database')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium" data-target="database">
+                <button onclick="switchTab('database')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium border-l-4 border-transparent" data-target="database">
                     <i class="fa-solid fa-cloud-arrow-up w-5"></i> Cargar Datos
                 </button>
-                <button onclick="switchTab('users')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium" data-target="users">
+                <button onclick="switchTab('users')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium border-l-4 border-transparent" data-target="users">
                     <i class="fa-solid fa-user-tie w-5"></i> Colaboradores
                 </button>
-                <button onclick="switchTab('incongruences')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors tab-btn text-red-600 dark:text-red-400 font-bold" data-target="incongruences">
+                <button onclick="switchTab('incongruences')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors tab-btn text-red-600 dark:text-red-400 font-bold border-l-4 border-transparent" data-target="incongruences">
                     <i class="fa-solid fa-triangle-exclamation w-5"></i> Alertas Críticas
                 </button>
-                <button onclick="switchTab('movements')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors tab-btn text-orange-600 dark:text-orange-400 font-medium" data-target="movements">
+                <button onclick="switchTab('movements')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors tab-btn text-orange-600 dark:text-orange-400 font-medium border-l-4 border-transparent" data-target="movements">
                     <i class="fa-solid fa-shuffle w-5"></i> Movimientos
                 </button>
             </nav>
+        </div>
+        
+        <!-- Toggle Theme Integrado en el Sidebar Abajo (Para coincidir con tu diseño) -->
+        <div class="p-6 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                <i class="fa-solid fa-sun text-yellow-500 text-xs"></i>
+                <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in flex-1 text-center">
+                    <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer"/>
+                    <label for="theme-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+                <i class="fa-solid fa-moon text-gray-400 dark:text-gray-300 text-xs"></i>
+            </div>
         </div>
     </aside>
 
     <!-- Área Principal -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         
-        <!-- Topbar Estilo Duoc -->
+        <!-- Topbar Estilo Duoc (Azul oscuro, similar a tu imagen) -->
         <header class="bg-duoc-blue text-white shadow-md px-8 py-4 flex justify-between items-center z-10 flex-shrink-0">
             <div>
-                <p class="text-xs font-semibold text-duoc-yellow uppercase tracking-wider mb-1">Coordinación Docente - Sede Viña del Mar</p>
+                <p class="text-xs font-bold text-duoc-yellow uppercase tracking-wider mb-1">Coordinación Docente - Sede Viña del Mar</p>
                 <h2 id="page-title" class="text-xl font-display font-bold">¡Hola! Analiza los datos de hoy.</h2>
             </div>
             
-            <div class="flex items-center gap-6">
-                <!-- Toggle Theme minimalist -->
-                <div class="flex items-center gap-2 bg-duoc-lightBlue px-3 py-1.5 rounded-full border border-blue-800">
-                    <i class="fa-solid fa-sun text-yellow-300 text-xs"></i>
-                    <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer"/>
-                        <label for="theme-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-blue-900 cursor-pointer"></label>
-                    </div>
-                    <i class="fa-solid fa-moon text-gray-300 text-xs"></i>
-                </div>
+            <div class="flex flex-col items-end">
+                <div id="live-clock" class="font-display font-black text-4xl text-duoc-yellow tracking-tight leading-none mb-1">00:00:00</div>
+                <div id="live-date" class="text-xs font-medium text-gray-300 tracking-wide">Cargando fecha...</div>
             </div>
         </header>
 
@@ -223,8 +228,8 @@
                             <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200"><h4 class="font-semibold">Benchmark Comparativo vs Sede</h4></div>
                             <div class="overflow-y-auto flex-1 p-0">
                                 <table class="w-full text-left text-sm">
-                                    <thead class="bg-white dark:bg-gray-800 sticky top-0 border-b">
-                                        <tr class="text-gray-500">
+                                    <thead class="bg-white dark:bg-gray-800 sticky top-0 border-b z-10">
+                                        <tr class="text-gray-500 text-xs">
                                             <th class="p-3">Servicio</th>
                                             <th class="p-3 text-center">Casos</th>
                                             <th class="p-3 text-center">Aprob/Rechaz</th>
@@ -292,24 +297,24 @@
             <!-- MOVIMIENTOS INTERNOS -->
             <div id="tab-movements" class="tab-content">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                         <h4 class="font-semibold mb-4">Servicios con más derivaciones</h4>
                         <div class="relative h-64"><canvas id="chartMovementsByService"></canvas></div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                         <h4 class="font-semibold mb-4">Funcionarios que más derivan</h4>
                         <div class="relative h-64"><canvas id="chartMovementsByStaff"></canvas></div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200">
-                    <div class="p-4 bg-gray-50 border-b"><h4 class="font-bold text-lg text-orange-600">🚨 Salón de la Burocracia (≥ 3 Movimientos)</h4></div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="p-4 bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700"><h4 class="font-bold text-lg text-orange-600">🚨 Salón de la Burocracia (≥ 3 Movimientos)</h4></div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-100 text-gray-600">
+                            <thead class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                                 <tr><th class="p-3">ID</th><th class="p-3">Servicio</th><th class="p-3">Estudiante</th><th class="p-3 text-center text-orange-600">Movs</th><th class="p-3">Último Dueño</th><th class="p-3">Estado</th></tr>
                             </thead>
-                            <tbody id="table-movements-body" class="divide-y divide-gray-200"></tbody>
+                            <tbody id="table-movements-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
                         </table>
                     </div>
                 </div>
@@ -322,7 +327,22 @@
     <script>
         const AppState = { resueltasData: [], activasData: [], alertsData: [], charts: {} };
 
-        // Diccionario de ortografía sin tildes para la validación de funcionarios
+        // RELOJ EN TIEMPO REAL
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-CL', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const dateStr = `${days[now.getDay()]}, ${now.getDate()} De ${months[now.getMonth()]} De ${now.getFullYear()}`;
+            
+            document.getElementById('live-clock').innerText = timeStr;
+            document.getElementById('live-date').innerText = dateStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Diccionario de ortografía sin tildes para la validación de funcionarios (Tolerancia a acentos incorporada en el validador)
         const dictionaryMistakes = {
             "haci": "así", "haiga": "haya", "iva": "iba", "hir": "ir",
             "acer": "hacer", "aber": "haber", "desicion": "decisión", "decicion": "decisión",
@@ -332,7 +352,8 @@
             "asiendo": "haciendo", "boy": "voy", "aser": "hacer", "habrir": "abrir",
             "hiba": "iba", "hacerlo": "hacerlo", "nesecario": "necesario", "preveer": "prever",
             "bacia": "vacía", "bacio": "vacío", "hechar": "echar", "llendo": "yendo",
-            "dijieron": "dijeron", "fuistes": "fuiste", "trajistes": "trajiste"
+            "dijieron": "dijeron", "fuistes": "fuiste", "trajistes": "trajiste",
+            "imprimido": "impreso", "andé": "anduve", "satisfació": "satisfizo"
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -346,16 +367,18 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${targetId}`).classList.add('active');
             document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('bg-duoc-blue', 'text-white', 'shadow-md');
-                b.classList.add('text-gray-600', 'dark:text-gray-300');
+                b.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-duoc-blue', 'dark:text-white', 'font-bold', 'border-duoc-yellow');
+                b.classList.add('text-gray-600', 'dark:text-gray-300', 'font-medium', 'border-transparent');
                 if(b.dataset.target === targetId) {
-                    b.classList.add('bg-duoc-blue', 'text-white', 'shadow-md');
-                    b.classList.remove('text-gray-600', 'dark:text-gray-300');
+                    b.classList.remove('text-gray-600', 'dark:text-gray-300', 'font-medium', 'border-transparent');
+                    b.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-duoc-blue', 'dark:text-white', 'font-bold', 'border-duoc-yellow');
                 }
             });
         }
 
         // --- LECTURA ROBUSTA DE EXCEL MEDIANTE ARRAY DIRECTO ---
+        // Al usar header: 1, ignoramos los nombres de las columnas que a veces vienen ocultos o con caracteres raros.
+        // Mapeamos directamente a la letra (índice numérico). D=3, F=5, J=9, K=10, L=11, M=12, N=13, O=14, P=15, AB=27, AC=28, AG=32
         function handleFileUpload(event, type) {
             const file = event.target.files[0];
             if (!file) return;
@@ -370,34 +393,30 @@
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // LECTURA DIRECTA POR ARRAY: Evita cuelgues por encabezados largos o vacíos
-                    // header: 1 devuelve arrays anidados, saltando la estructura de diccionario que causa loops infinitos.
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
                     
                     if(rows.length < 2) throw new Error("Archivo sin datos");
 
                     const processedData = [];
-                    // Saltamos la fila 0 (Cabeceras). Si hay más filas de basura arriba, el "if(!r[3])" las salta.
                     for (let i = 1; i < rows.length; i++) {
                         const r = rows[i];
-                        // Verificamos que la fila exista y que la Columna D tenga un identificador válido
                         if (!r || !r[3] || String(r[3]).includes('Número') || String(r[3]).includes('Solicitud')) continue;
                         
                         const parseDate = (val) => val ? (val instanceof Date ? val : new Date(val)) : null;
 
                         let obj = {
-                            id: String(r[3] || 'S/N'),                  // Col D (0-index: 3)
-                            servicio: String(r[5] || 'General'),        // Col F (0-index: 5)
-                            estudiante: String(r[9] || 'Sin Nombre'),   // Col J (0-index: 9)
-                            descripcion: String(r[10] || ''),           // Col K (0-index: 10)
-                            propietario: String(r[11] || 'Sin Asignar'),// Col L (0-index: 11)
-                            estado: String(r[12] || (type === 'activas' ? 'En proceso' : 'Resuelto')), // Col M
-                            fechaCreacion: parseDate(r[13]),            // Col N
-                            fechaResolucion: parseDate(r[14]),          // Col O
-                            carrera: String(r[15] || ''),               // Col P
-                            detalleEstado: String(r[27] || ''),         // Col AB (0-index: 27)
-                            resolucion: String(r[28] || ''),            // Col AC (0-index: 28)
-                            movimientos: parseInt(r[32]) || 0,          // Col AG (0-index: 32)
+                            id: String(r[3] || 'S/N'),                  
+                            servicio: String(r[5] || 'General'),        
+                            estudiante: String(r[9] || 'Sin Nombre'),   
+                            descripcion: String(r[10] || ''),           
+                            propietario: String(r[11] || 'Sin Asignar'),
+                            estado: String(r[12] || (type === 'activas' ? 'En proceso' : 'Resuelto')), 
+                            fechaCreacion: parseDate(r[13]),            
+                            fechaResolucion: parseDate(r[14]),          
+                            carrera: String(r[15] || ''),               
+                            detalleEstado: String(r[27] || ''),         
+                            resolucion: String(r[28] || ''),            
+                            movimientos: parseInt(r[32]) || 0,          
                             type: type
                         };
                         
@@ -430,36 +449,36 @@
             const serv = (d.servicio || '').toUpperCase();
             const estadoDetalle = (d.detalleEstado || '').toLowerCase();
 
-            // 1. Deserción Oculta
+            // 1. Deserción Oculta (Rojo)
             const deserKeywords = ['renuncia', 'retiro', 'baja'];
             let deserMatched = deserKeywords.filter(k => desc.includes(k));
-            if (serv.includes('SUSPENSION') && deserMatched.length > 0) {
+            if ((serv.includes('SUSPENSION') || serv.includes('SUSPENSIÓN')) && deserMatched.length > 0) {
                 alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border border-red-300', matchTarget: 'desc', matchWords: deserMatched });
             }
 
-            // 2. Rechazo Injustificado
+            // 2. Rechazo Injustificado (Naranja)
             if (estadoDetalle.includes('rechaz') || estadoDetalle.includes('cancel')) {
                 if (res.length < 15 || res === 'n/a' || res.includes('sin texto')) {
                     alerts.push({ tipo: 'Rechazo sin Justificar', clase: 'bg-orange-100 text-orange-800 border border-orange-300' });
                 }
             }
 
-            // 3. Riesgo Legal
+            // 3. Riesgo Legal (Morado)
             const legalKeywords = ['sernac', 'demanda', 'abogado', 'estafa', 'ministerio', 'superintendencia'];
             let legalMatched = legalKeywords.filter(k => desc.includes(k));
             if (legalMatched.length > 0) {
                 alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border border-purple-300', matchTarget: 'desc', matchWords: legalMatched });
             }
 
-            // 4. Duda Financiera
-            const finKeywords = ['gratuidad', 'cae', 'beca', 'cobro indebido'];
+            // 4. Duda Financiera (Amarillo)
+            const finKeywords = ['gratuidad', 'cae ', 'beca', 'cobro indebido'];
             let finMatched = finKeywords.filter(k => desc.includes(k));
             if (finMatched.length > 0 && !serv.includes('ARANCEL') && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
                 alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border border-yellow-300', matchTarget: 'desc', matchWords: finMatched });
             }
 
-            // 5. Quejas Personal (Ampliado)
-            const quejasKws = ['flojo', 'mala atencion', 'pesimo', 'se demora', 'se demoraron', 'no responde', 'mucho tiempo', 'ninguna respuesta', 'cero empatia', 'me tramitan', 'falta de respeto', 'maltrato', 'decepcionante'];
+            // 5. Quejas Personal (Rosa)
+            const quejasKws = ['flojo', 'mala atencion', 'mala atención', 'pesimo', 'pésimo', 'se demora', 'se demoraron', 'no responde', 'mucho tiempo', 'ninguna respuesta', 'cero empatia', 'cero empatía', 'me tramitan', 'falta de respeto', 'maltrato', 'decepcionante'];
             let quejaMatched = quejasKws.filter(k => desc.includes(k));
             if (quejaMatched.length > 0) {
                 alerts.push({ tipo: 'Queja hacia Personal', clase: 'bg-pink-100 text-pink-800 border border-pink-300', matchTarget: 'desc', matchWords: quejaMatched });
@@ -467,6 +486,7 @@
 
             // 6. Ortografía Funcionario (Ignora tildes en el mapeo)
             if (resOrig.trim().length > 0) {
+                // Quitamos acentos para validar sin que nos importen las tildes correctas o incorrectas
                 const removeAccents = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 const normalizedRes = removeAccents(resOrig);
                 
@@ -510,7 +530,7 @@
             document.getElementById('kpi-total').innerText = allData.length;
             document.getElementById('kpi-resolved').innerText = resueltas.length;
             document.getElementById('kpi-approved').innerText = resueltas.length ? Math.round((aprobadas/resueltas.length)*100)+'%' : '0%';
-            document.getElementById('kpi-rejected').innerText = rechazadas;
+            document.getElementById('kpi-rejected').innerText = rechazadas; // KPI Q Rechazadas
             document.getElementById('kpi-time').innerText = countD ? (totalD/countD).toFixed(1)+' d' : '0 d';
             document.getElementById('kpi-moves').innerText = resueltas.length ? (totalM/resueltas.length).toFixed(1) : '0';
 
@@ -542,8 +562,12 @@
                 alertsToProcess.forEach(a => {
                     if (a.matchTarget === 'desc' && a.matchWords) {
                         a.matchWords.forEach(w => {
-                            const regex = new RegExp(`\\b(${w})\\b`, 'gi');
-                            let cls = a.tipo.includes('Legal') ? 'highlight-purple' : (a.tipo.includes('Queja') ? 'highlight-pink' : (a.tipo.includes('Financiera') ? 'highlight-yellow' : 'highlight-red'));
+                            const regex = new RegExp(`(${w})`, 'gi');
+                            let cls = 'highlight-red'; // Default
+                            if (a.tipo.includes('Legal')) cls = 'highlight-purple';
+                            else if (a.tipo.includes('Queja')) cls = 'highlight-pink';
+                            else if (a.tipo.includes('Financiera')) cls = 'highlight-yellow';
+                            
                             textDesc = textDesc.replace(regex, `<span class="${cls}">$1</span>`);
                         });
                     }
@@ -554,13 +578,14 @@
                 alertsToProcess.forEach(a => {
                     if (a.matchTarget === 'res' && a.matchWords) {
                         a.matchWords.forEach(w => {
+                            // Crear regex tolerante a tildes para resaltar la palabra exacta como la escribió
                             let regexStr = w.split('').map(char => {
                                 if(char === 'a') return '[aáAÁ]'; if(char === 'e') return '[eéEÉ]';
                                 if(char === 'i') return '[iíIÍ]'; if(char === 'o') return '[oóOÓ]';
                                 if(char === 'u') return '[uúüUÚÜ]'; return char;
                             }).join('');
                             const regex = new RegExp(`\\b(${regexStr})\\b`, 'gi');
-                            textRes = textRes.replace(regex, `<span class="highlight-cyan" title="Sugerencia: ${dictionaryMistakes[w]}">$1</span>`);
+                            textRes = textRes.replace(regex, `<span class="highlight-cyan" title="Sugerencia ortográfica: ${dictionaryMistakes[w]}">$1</span>`);
                         });
                     }
                 });
@@ -576,27 +601,48 @@
             });
         }
 
-        // --- RENDERIZAR TABLA DE MOVIMIENTOS ---
+        // --- RENDERIZAR TABLA Y GRÁFICOS DE MOVIMIENTOS ---
         function renderMovementsTable(data) {
             const tbody = document.getElementById('table-movements-body');
             const sorted = data.filter(d => d.movimientos >= 3).sort((a,b) => b.movimientos - a.movimientos);
             tbody.innerHTML = sorted.map(d => `
-                <tr class="border-b">
-                    <td class="p-3 font-mono text-xs text-blue-600">${d.id}</td>
+                <tr class="border-b dark:border-gray-700">
+                    <td class="p-3 font-mono text-xs text-blue-600 dark:text-blue-400">${d.id}</td>
                     <td class="p-3 text-xs">${d.servicio}</td>
                     <td class="p-3 text-xs">${d.estudiante}</td>
-                    <td class="p-3 text-center text-orange-600 font-bold bg-orange-50">${d.movimientos}</td>
+                    <td class="p-3 text-center text-orange-600 font-bold bg-orange-50 dark:bg-orange-900/20">${d.movimientos}</td>
                     <td class="p-3 text-xs font-semibold">${d.propietario}</td>
-                    <td class="p-3 text-xs"><span class="bg-gray-200 px-2 py-1 rounded">${d.estado}</span></td>
+                    <td class="p-3 text-xs"><span class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">${d.estado}</span></td>
                 </tr>
             `).join('');
+
+            // Gráficos de movimientos
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e5e7eb' : '#374151';
+
+            const mServ = {}; const mStaff = {};
+            data.forEach(d => {
+                if(!mServ[d.servicio]) mServ[d.servicio] = { m:0, c:0 }; mServ[d.servicio].m += d.movimientos; mServ[d.servicio].c++;
+                if(d.propietario && d.propietario !== 'Sin Asignar' && d.propietario !== 'No Asignado') { 
+                    if(!mStaff[d.propietario]) mStaff[d.propietario] = { m:0, c:0 }; 
+                    mStaff[d.propietario].m += d.movimientos; mStaff[d.propietario].c++; 
+                }
+            });
+
+            const tsM = Object.entries(mServ).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,5);
+            if(AppState.charts.mS) AppState.charts.mS.destroy();
+            AppState.charts.mS = new Chart(document.getElementById('chartMovementsByService'), { type: 'bar', data: { labels: tsM.map(s=>s.n.substring(0,15)), datasets: [{ data: tsM.map(s=>s.v), backgroundColor: '#F97316', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } } });
+
+            const tuM = Object.entries(mStaff).filter(x=>x[1].c>2).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,10);
+            if(AppState.charts.mU) AppState.charts.mU.destroy();
+            AppState.charts.mU = new Chart(document.getElementById('chartMovementsByStaff'), { type: 'bar', data: { labels: tuM.map(s=>s.n.split(' ')[0]), datasets: [{ data: tuM.map(s=>s.v), backgroundColor: '#FB923C', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } } });
         }
 
         // --- ANÁLISIS DE COLABORADORES (BENCHMARK) ---
         function populateUsers(data) {
             const select = document.getElementById('user-select');
             const val = select.value;
-            const users = [...new Set(data.map(d => d.propietario))].filter(u => u && u!=='Sin Asignar').sort();
+            const users = [...new Set(data.map(d => d.propietario))].filter(u => u && u!=='Sin Asignar' && u!=='No Asignado').sort();
             select.innerHTML = '<option value="">Seleccione un funcionario...</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
             if(users.includes(val)) select.value = val;
         }
@@ -626,8 +672,11 @@
             document.getElementById('user-moves').innerText = uData.length ? (tM/uData.length).toFixed(1) : '0';
             document.getElementById('user-alerts').innerText = alerts;
 
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e5e7eb' : '#374151';
+
             if(AppState.charts.uRes) AppState.charts.uRes.destroy();
-            AppState.charts.uRes = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(states), datasets: [{ data: Object.values(states), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
+            AppState.charts.uRes = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(states), datasets: [{ data: Object.values(states), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'], borderWidth: 1, borderColor: isDark ? '#1f2937' : '#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: {color: textColor} } } } });
 
             const gStats = {};
             AppState.resueltasData.forEach(d => {
@@ -653,42 +702,30 @@
                 const td = gt ? (ut-gt).toFixed(1) : 0; const md = gm ? (um-gm).toFixed(1) : 0;
                 const tCol = td > 0 ? 'text-red-500' : 'text-green-500'; const mCol = md > 0 ? 'text-orange-500' : 'text-green-500';
 
-                return `<tr class="border-b"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center">${s.c}</td><td class="p-3 text-center text-xs"><span class="text-green-500 font-bold">${s.a}</span> - <span class="text-red-500 font-bold">${s.r}</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${ut.toFixed(1)}d</span> <span class="text-[10px] ${tCol}">${td>0?'+':''}${td} vs Sede</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${um.toFixed(1)}</span> <span class="text-[10px] ${mCol}">${md>0?'+':''}${md} vs Sede</span></td></tr>`;
+                return `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center">${s.c}</td><td class="p-3 text-center text-xs"><span class="text-green-500 font-bold">${s.a}</span> - <span class="text-red-500 font-bold">${s.r}</span></td><td class="p-3 text-center bg-gray-50 dark:bg-gray-800"><span class="font-bold">${ut.toFixed(1)}d</span> <span class="text-[10px] ${tCol}">${td>0?'+':''}${td} vs Sede</span></td><td class="p-3 text-center bg-gray-50 dark:bg-gray-800"><span class="font-bold">${um.toFixed(1)}</span> <span class="text-[10px] ${mCol}">${md>0?'+':''}${md} vs Sede</span></td></tr>`;
             }).join('');
         };
 
         // --- GRÁFICOS PRINCIPALES ---
         function drawMainCharts(all, res) {
-            Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563';
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e5e7eb' : '#4b5563';
+            Chart.defaults.color = textColor;
             Chart.defaults.font.family = 'Inter';
 
             const sC = {}; res.forEach(d => sC[d.servicio] = (sC[d.servicio]||0)+1);
             const tS = Object.entries(sC).sort((a,b)=>b[1]-a[1]).slice(0,5);
             if(AppState.charts.pS) AppState.charts.pS.destroy();
-            AppState.charts.pS = new Chart(document.getElementById('chartPieServices'), { type: 'doughnut', data: { labels: tS.map(s=>s[0].substring(0,15)), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels:{boxWidth:10, font:{size:10}} } } } });
+            AppState.charts.pS = new Chart(document.getElementById('chartPieServices'), { type: 'doughnut', data: { labels: tS.map(s=>s[0].substring(0,15)), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'], borderColor: isDark?'#1f2937':'#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels:{boxWidth:10, font:{size:10}} } } } });
 
             const aC = {}; res.forEach(d => aC[d.detalleEstado] = (aC[d.detalleEstado]||0)+1);
             if(AppState.charts.rT) AppState.charts.rT.destroy();
-            AppState.charts.rT = new Chart(document.getElementById('chartResolutionType'), { type: 'pie', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{boxWidth:10, font:{size:10}} } } } });
+            AppState.charts.rT = new Chart(document.getElementById('chartResolutionType'), { type: 'pie', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'], borderColor: isDark?'#1f2937':'#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{boxWidth:10, font:{size:10}} } } } });
 
-            const stC = {}; res.forEach(d => { if(d.propietario!=='Sin Asignar') stC[d.propietario] = (stC[d.propietario]||0)+1; });
+            const stC = {}; res.forEach(d => { if(d.propietario!=='Sin Asignar' && d.propietario!=='No Asignado') stC[d.propietario] = (stC[d.propietario]||0)+1; });
             const topSt = Object.entries(stC).sort((a,b)=>b[1]-a[1]).slice(0,6);
             if(AppState.charts.bS) AppState.charts.bS.destroy();
-            AppState.charts.bS = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ data: topSt.map(s=>s[1]), backgroundColor: '#00274B', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.05)'}}} } });
-
-            const mServ = {}; const mStaff = {};
-            all.forEach(d => {
-                if(!mServ[d.servicio]) mServ[d.servicio] = { m:0, c:0 }; mServ[d.servicio].m += d.movimientos; mServ[d.servicio].c++;
-                if(d.propietario!=='Sin Asignar') { if(!mStaff[d.propietario]) mStaff[d.propietario] = { m:0, c:0 }; mStaff[d.propietario].m += d.movimientos; mStaff[d.propietario].c++; }
-            });
-
-            const tsM = Object.entries(mServ).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,5);
-            if(AppState.charts.mS) AppState.charts.mS.destroy();
-            AppState.charts.mS = new Chart(document.getElementById('chartMovementsByService'), { type: 'bar', data: { labels: tsM.map(s=>s.n.substring(0,15)), datasets: [{ data: tsM.map(s=>s.v), backgroundColor: '#F97316', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-
-            const tuM = Object.entries(mStaff).filter(x=>x[1].c>2).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,10);
-            if(AppState.charts.mU) AppState.charts.mU.destroy();
-            AppState.charts.mU = new Chart(document.getElementById('chartMovementsByStaff'), { type: 'bar', data: { labels: tuM.map(s=>s.n.split(' ')[0]), datasets: [{ data: tuM.map(s=>s.v), backgroundColor: '#FB923C', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            AppState.charts.bS = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ data: topSt.map(s=>s[1]), backgroundColor: '#00274B', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales:{x:{grid:{display:false}},y:{grid:{color: isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.05)'}}} } });
         }
     </script>
 </body>
