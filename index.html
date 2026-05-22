@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analítico de Solicitudes - Duoc UC</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        duoc: {
+                            blue: '#00274B', lightBlue: '#003A6E', yellow: '#FBB03B', darkYellow: '#E59B28'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        .toggle-checkbox:checked { right: 0; border-color: #4ade80; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #4ade80; }
+        .toggle-checkbox { right: 0; z-index: 1; border-color: #e5e7eb; transition: all 0.3s; }
+        .toggle-label { background-color: #e5e7eb; transition: all 0.3s; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-duoc-blue text-white flex flex-col justify-between shadow-xl z-10 flex-shrink-0">
+        <div>
+            <div class="p-6 border-b border-duoc-lightBlue flex items-center gap-3">
+                <div class="w-10 h-10 bg-duoc-yellow rounded-lg flex items-center justify-center font-bold text-duoc-blue text-xl">D</div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Sede Viña del Mar</h1>
+                    <p class="text-xs text-duoc-yellow">Análisis de Solicitudes</p>
+                </div>
+            </div>
+            <nav class="p-4 space-y-2 mt-2">
+                <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn active bg-duoc-lightBlue" data-target="dashboard"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard Principal</button>
+                <button onclick="switchTab('database')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="database"><i class="fa-solid fa-database w-5"></i> Actualizar Datos</button>
+                <button onclick="switchTab('users')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="users"><i class="fa-solid fa-users-gear w-5"></i> Análisis Colaboradores</button>
+                <button onclick="switchTab('incongruences')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn text-duoc-yellow" data-target="incongruences"><i class="fa-solid fa-triangle-exclamation w-5"></i> Alertas Críticas</button>
+                <button onclick="switchTab('movements')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn text-orange-400" data-target="movements"><i class="fa-solid fa-shuffle w-5"></i> Movimientos Internos</button>
+                <button onclick="switchTab('resolved')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="resolved"><i class="fa-solid fa-check-double w-5"></i> Bandeja Resueltas</button>
+                <button onclick="switchTab('active')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="active"><i class="fa-solid fa-clock-rotate-left w-5"></i> Bandeja Activas</button>
+            </nav>
+        </div>
+        <div class="p-6 border-t border-duoc-lightBlue text-sm text-gray-400">
+            <p>Plataforma Interna v4.0 (Full)</p>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-100 dark:bg-[#0f172a]">
+        <header class="bg-white dark:bg-gray-800 shadow-sm px-8 py-4 flex justify-between items-center z-10 transition-colors duration-300">
+            <h2 id="page-title" class="text-2xl font-semibold text-duoc-blue dark:text-white">Dashboard General</h2>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sun text-gray-400 dark:text-yellow-400"></i>
+                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="theme-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                    <i class="fa-solid fa-moon text-gray-400 dark:text-blue-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 2xl:p-12">
+            <div class="max-w-[1600px] mx-auto w-full">
+            
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-blue-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Solicitudes</p>
+                        <h3 id="kpi-total" class="text-2xl font-bold text-gray-800 dark:text-white">0</h3>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-green-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Resueltas vs Activas</p>
+                        <h3 id="kpi-resolved" class="text-2xl font-bold text-green-600 dark:text-green-400">0 <span class="text-sm text-gray-400">/ 0</span></h3>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-duoc-yellow">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">% Aprobadas</p>
+                        <h3 id="kpi-approved" class="text-2xl font-bold text-duoc-darkYellow">0%</h3>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-red-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Q Rechazadas/Cancel</p>
+                        <h3 id="kpi-rejected" class="text-2xl font-bold text-red-600 dark:text-red-400">0</h3>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-purple-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Tiem. Promedio</p>
+                        <h3 id="kpi-time" class="text-2xl font-bold text-purple-600 dark:text-purple-400">0 d</h3>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-orange-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Prom. Movimientos (AG)</p>
+                        <h3 id="kpi-moves" class="text-2xl font-bold text-orange-600 dark:text-orange-400">0</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Servicios Nivel 2</h4>
+                        <div class="relative h-64 w-full"><canvas id="chartPieServices"></canvas></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Detalle de Resolución (Col. AB)</h4>
+                        <div class="relative h-64 w-full"><canvas id="chartResolutionType"></canvas></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Colaboradores (Volumen)</h4>
+                        <div class="relative h-64 w-full"><canvas id="chartBarStaff"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-database" class="tab-content">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Gestión de Bases de Datos</h3>
+                    <p class="text-gray-500 dark:text-gray-400">Sube tus archivos Excel (.xlsx/.xls/.csv). El panel consolidará los datos para todo el análisis.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-t-4 border-green-500">
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2">1. Archivo de Resueltas</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Solicitudes cerradas, aprobadas, rechazadas.</p>
+                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-green-900/30 dark:file:text-green-400 dark:text-gray-300" onchange="handleFileUpload(event, 'resueltas')" />
+                        <div id="status-resueltas" class="mt-4 text-xs font-medium text-gray-500">Esperando archivo...</div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-t-4 border-duoc-yellow">
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2">2. Archivo de Activas</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Solicitudes en proceso o derivadas.</p>
+                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 dark:file:bg-yellow-900/30 dark:file:text-yellow-400 dark:text-gray-300" onchange="handleFileUpload(event, 'activas')" />
+                        <div id="status-activas" class="mt-4 text-xs font-medium text-gray-500">Esperando archivo...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row items-center gap-4 border-l-4 border-duoc-blue">
+                    <label class="font-semibold text-gray-700 dark:text-gray-200 min-w-max">Auditar Colaborador:</label>
+                    <select id="user-select" class="w-full md:w-96 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-duoc-yellow" onchange="updateUserAnalysis()">
+                        <option value="">Selecciona un colaborador...</option>
+                    </select>
+                </div>
+
+                <div id="user-stats-container" class="hidden">
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Volumen Atendido</p>
+                            <h3 id="user-total" class="text-3xl font-bold text-duoc-blue dark:text-blue-400">0</h3>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-green-500">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Estado Principal</p>
+                            <h3 id="user-ratio" class="text-xl font-bold text-gray-800 dark:text-white truncate">-</h3>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-duoc-yellow">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tiempo Promedio</p>
+                            <h3 id="user-time" class="text-3xl font-bold text-duoc-darkYellow">0 d</h3>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-orange-500">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Prom. Movimientos</p>
+                            <h3 id="user-moves" class="text-3xl font-bold text-orange-500">0</h3>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-red-500 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onclick="switchTab('incongruences')">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Alertas Detectadas</p>
+                            <h3 id="user-alerts" class="text-3xl font-bold text-red-500">0</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm lg:col-span-1">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Todos sus Estados (AB)</h4>
+                            <div class="relative h-64 w-full flex justify-center"><canvas id="chartUserResolution"></canvas></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm overflow-hidden lg:col-span-2 flex flex-col h-full">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Benchmark Comparativo vs Sede</h4>
+                            <div class="overflow-y-auto flex-1">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
+                                        <tr class="text-gray-600 dark:text-gray-300 text-xs">
+                                            <th class="p-3">Servicio</th><th class="p-3 text-center">Casos</th><th class="p-3">Estados</th>
+                                            <th class="p-3 text-center bg-blue-50/50 dark:bg-gray-800">Tiempos</th>
+                                            <th class="p-3 text-center bg-orange-50/50 dark:bg-gray-800">Movs.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="user-benchmark-body" class="text-xs divide-y divide-gray-100 dark:divide-gray-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-incongruences" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-brain text-3xl text-duoc-blue dark:text-blue-400 mt-1"></i>
+                        <div class="w-full">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-3">Alertas Críticas (Motor de Riesgos)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+                                <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-100"><span class="font-bold text-red-700 block">1. Deserción Oculta</span>Pide renuncia/baja en Suspensión.</div>
+                                <div class="bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-100"><span class="font-bold text-orange-700 block">2. Rechazo sin Justificar</span>Texto vacío o genérico.</div>
+                                <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded border border-purple-100"><span class="font-bold text-purple-700 block">3. Riesgo Legal</span>Palabras: Sernac, demanda, estafa.</div>
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-100"><span class="font-bold text-yellow-700 block">4. Duda Financiera</span>Menciona CAE/Beca mal tipificado.</div>
+                                <div class="bg-pink-50 dark:bg-pink-900/20 p-3 rounded border border-pink-100"><span class="font-bold text-pink-700 block">5. Quejas / Demoras</span>Acusa: "se demoran", "flojo", "mala atención".</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Riesgo por Tipo</h4>
+                        <div class="relative h-48 w-full"><canvas id="chartAlertsByType"></canvas></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm lg:col-span-2">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Alertas por Colaborador</h4>
+                        <div class="relative h-48 w-full"><canvas id="chartAlertsByStaff"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-750">
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-white">Registro de Alertas</h4>
+                        <select id="filter-alert-type" class="p-2 border rounded text-sm focus:ring-2 focus:ring-duoc-yellow dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="renderAlertsView()">
+                            <option value="all">Todas las Alertas</option>
+                            <option value="Deserción Oculta">Deserción Oculta</option>
+                            <option value="Rechazo sin Justificar">Rechazo sin Justificar</option>
+                            <option value="Riesgo Legal / Reclamo">Riesgo Legal / Reclamo Grave</option>
+                            <option value="Duda Financiera Oculta">Duda Financiera Oculta</option>
+                            <option value="Queja hacia Personal">Quejas hacia Personal</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                    <th class="p-4 w-1/5">Solicitud / Riesgo</th>
+                                    <th class="p-4 w-1/4">Descripción del Alumno</th>
+                                    <th class="p-4 w-1/3">Texto Resolución (Col. AC)</th>
+                                    <th class="p-4">Resolutor / Estado AB</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-alerts-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-movements" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 border border-orange-200 rounded-xl p-6 mb-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-people-arrows text-3xl text-orange-500 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Movimientos Internos (Columna AG)</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Audita transferencias o "peloteos" de solicitudes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Servicios más Derivados</h4>
+                        <div class="relative h-64 w-full"><canvas id="chartMovementsByService"></canvas></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Colaboradores que Derivan</h4>
+                        <div class="relative h-64 w-full"><canvas id="chartMovementsByStaff"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-200"><h4 class="text-lg font-bold">🚨 Salón de la Burocracia (≥ 3 Movimientos)</h4></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                    <th class="p-4">N° Solicitud</th><th class="p-4">Servicio N2</th><th class="p-4">Estudiante</th>
+                                    <th class="p-4 text-center text-orange-600">N° Movs (AG)</th><th class="p-4">Último Propietario</th><th class="p-4">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-movements-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-resolved" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Bandeja Histórica (Resueltas)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3">ID</th><th class="p-3">Servicio N2</th><th class="p-3">Resolución (AB)</th><th class="p-3 text-center">Movs (AG)</th><th class="p-3">Propietario</th></tr></thead>
+                            <tbody id="table-resolved-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-active" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Bandeja Activas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3">ID</th><th class="p-3">Fecha</th><th class="p-3">Estudiante</th><th class="p-3 text-center">Movs (AG)</th><th class="p-3">Propietario</th></tr></thead>
+                            <tbody id="table-active-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const AppState = { resueltasData: [], activasData: [], alertsData: [], charts: {} };
+
+        // Datos Mock para visualización inicial
+        const mockData = [
+            {
+                id: "CAS-3984220", servicio: "SUSPENSION", estudiante: "NAHIR HUNT",
+                descripcion: "quiero renunciar a la carrera porque me cambiaré de ciudad.", propietario: "Antonio Carrasco",
+                estado: "Resuelto", fechaCreacion: new Date("2026-02-05"), fechaResolucion: new Date("2026-02-06"),
+                carrera: "INFORMÁTICA", detalleEstado: "Rechazado", resolucion: "Se rechaza, alumno no tiene derecho a suspensión.", movimientos: 3, type: 'resueltas'
+            },
+            {
+                id: "CAS-7778889", servicio: "TOMA DE RAMOS", estudiante: "CAMILA ROJAS",
+                descripcion: "El coordinador es un flojo, se demora en responder y la mala atencion es increible.", propietario: "Bryan Valenzuela",
+                estado: "En proceso", fechaCreacion: new Date("2026-05-21"), fechaResolucion: null,
+                carrera: "MARKETING", detalleEstado: "Derivado", resolucion: "", movimientos: 5, type: 'activas'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('theme-toggle').addEventListener('change', (e) => {
+                e.target.checked ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+                updateDashboards();
+            });
+            AppState.resueltasData = mockData.filter(d => d.type === 'resueltas').map(d => ({...d, alerts: detectAlerts(d)}));
+            AppState.activasData = mockData.filter(d => d.type === 'activas').map(d => ({...d, alerts: detectAlerts(d)}));
+            updateDashboards();
+        });
+
+        function switchTab(targetId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${targetId}`).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-duoc-lightBlue', 'border-l-4', 'border-duoc-yellow', 'text-orange-400');
+                if(b.dataset.target === targetId) b.classList.add('bg-duoc-lightBlue', 'border-l-4', 'border-duoc-yellow');
+                if(b.dataset.target === 'movements' && targetId !== 'movements') b.classList.add('text-orange-400');
+            });
+        }
+
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById(`status-${type}`);
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Procesando, por favor espera...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    
+                    // Leer como Matriz 2D para garantizar acceso a las columnas por su Letra (A=0, B=1... AB=27, AC=28, AG=32)
+                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+                    
+                    if(rows.length < 2) throw new Error("Archivo vacío o sin datos.");
+
+                    // Ignoramos la primera fila (encabezados) y mapeamos directamente a tus columnas especificadas:
+                    // D(3)=ID, F(5)=Servicio, J(9)=Contacto, K(10)=Descripción, L(11)=Propietario, M(12)=Estado
+                    // N(13)=FechaC, O(14)=FechaR, P(15)=Carrera, AB(27)=Detalle, AC(28)=Resolución, AG(32)=Movimientos
+                    const processedData = [];
+                    for(let i=1; i<rows.length; i++) {
+                        const row = rows[i];
+                        if(!row[3]) continue; // Si no hay ID, saltar fila
+                        
+                        let dObj = {
+                            id: String(row[3]),
+                            servicio: String(row[5] || 'General'),
+                            estudiante: String(row[9] || 'S/N'),
+                            descripcion: String(row[10] || '').toLowerCase(),
+                            propietario: String(row[11] || 'No Asignado'),
+                            estado: String(row[12] || (type === 'activas' ? 'Activa' : 'Resuelto')),
+                            fechaCreacion: row[13] ? new Date(row[13]) : null,
+                            fechaResolucion: row[14] ? new Date(row[14]) : null,
+                            carrera: String(row[15] || 'S/I'),
+                            detalleEstado: String(row[27] || '').trim(), // Columna AB
+                            resolucion: String(row[28] || '').trim(),    // Columna AC
+                            movimientos: parseInt(row[32]) || 0,         // Columna AG
+                            type: type
+                        };
+                        dObj.alerts = detectAlerts(dObj);
+                        processedData.push(dObj);
+                    }
+
+                    if(type === 'resueltas') AppState.resueltasData = processedData;
+                    else AppState.activasData = processedData;
+
+                    statusDiv.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> ¡Listo! ${processedData.length} registros cargados correctamente.`;
+                    updateDashboards();
+                    setTimeout(() => switchTab('dashboard'), 1000);
+                } catch (err) {
+                    statusDiv.innerHTML = `<i class="fa-solid fa-xmark text-red-500"></i> Error de formato. Asegúrate de subir el archivo exportado original.`;
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function detectAlerts(d) {
+            let alerts = [];
+            const desc = d.descripcion; const res = d.resolucion.toLowerCase(); const serv = d.servicio.toUpperCase(); const estadoDetalle = d.detalleEstado.toLowerCase();
+
+            if (serv.includes('SUSPENSION') && (desc.includes('renuncia') || desc.includes('retiro') || desc.includes('baja'))) {
+                alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300' });
+            }
+            if (estadoDetalle.includes('rechaz') || estadoDetalle.includes('cancel')) {
+                if (res.length < 15 || res === 'n/a' || res === 'rechazado') alerts.push({ tipo: 'Rechazo sin Justificar', clase: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300' });
+            }
+            if (desc.includes('sernac') || desc.includes('demanda') || desc.includes('abogado') || desc.includes('estafa') || desc.includes('ministerio') || desc.includes('indignado')) {
+                alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300' });
+            }
+            if ((desc.includes('gratuidad') || desc.includes('cae ') || desc.includes('beca')) && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
+                alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300' });
+            }
+            const qK = ['flojo','mala atencion','mala atención','pesimo','pésimo','se demora','se demoraron','no responde','aún no responden','llevo dias','mucho tiempo','ninguna respuesta','cero empatia','me tramitan','falta de respeto','maltrato','grosero'];
+            let mK = null;
+            if (qK.some(k => { if(desc.includes(k)){ mK = k; return true; } return false; })) {
+                alerts.push({ tipo: 'Queja hacia Personal', matched: mK, clase: 'bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-900/50 dark:text-pink-300' });
+            }
+            return alerts;
+        }
+
+        function updateDashboards() {
+            const allData = [...AppState.resueltasData, ...AppState.activasData];
+            if(allData.length === 0) return;
+            const resueltas = AppState.resueltasData, activas = AppState.activasData;
+            
+            const aprobadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('aprob')).length;
+            const rechazadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('rechaz') || d.detalleEstado.toLowerCase().includes('cancel')).length;
+            
+            let totalDays = 0, validTimeCount = 0, totalMoves = 0;
+            resueltas.forEach(d => {
+                if(d.fechaResolucion && d.fechaCreacion) { totalDays += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion) / (1000*60*60*24)); validTimeCount++; }
+                totalMoves += d.movimientos;
+            });
+
+            document.getElementById('kpi-total').innerText = allData.length;
+            document.getElementById('kpi-resolved').innerHTML = `${resueltas.length} <span class="text-sm">/ ${activas.length} act.</span>`;
+            document.getElementById('kpi-approved').innerText = resueltas.length ? Math.round((aprobadas/resueltas.length)*100)+'%' : '0%';
+            document.getElementById('kpi-rejected').innerText = rechazadas;
+            document.getElementById('kpi-time').innerText = validTimeCount ? (totalDays/validTimeCount).toFixed(1)+' d' : '0 d';
+            document.getElementById('kpi-moves').innerText = resueltas.length ? (totalMoves/resueltas.length).toFixed(1) : '0';
+
+            AppState.alertsData = allData.filter(d => d.alerts.length > 0);
+            
+            window.renderAlertsView(); drawAlertsCharts();
+            renderMovementsTable(allData); drawMovementsCharts(allData);
+            fillTableList('table-resolved-body', resueltas); fillTableList('table-active-body', activas, true);
+            populateUsersDropdown(allData); drawMainCharts(allData, resueltas);
+            if(!document.getElementById('user-stats-container').classList.contains('hidden')) updateUserAnalysis();
+        }
+
+        window.renderAlertsView = function() {
+            const fV = document.getElementById('filter-alert-type').value;
+            const tbody = document.getElementById('table-alerts-body'); tbody.innerHTML = '';
+            let dR = fV === 'all' ? AppState.alertsData : AppState.alertsData.filter(d => d.alerts.some(a => a.tipo === fV));
+            
+            if(dR.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Sin registros bajo este filtro.</td></tr>'; return; }
+            dR.forEach(d => {
+                const bH = d.alerts.filter(a => fV === 'all' || a.tipo === fV).map(a => `<span class="inline-block mt-1 px-2 py-1 rounded text-[10px] font-bold border ${a.clase}">${a.tipo}</span>`).join('<br>');
+                let hD = `"${d.descripcion}"`;
+                d.alerts.forEach(a => { if(a.matched) hD = hD.replace(new RegExp(`(${a.matched})`, 'gi'), `<span class="bg-pink-300 text-pink-900 font-bold px-1 rounded shadow-sm">$1</span>`); });
+                
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b">
+                    <td class="p-4 align-top"><span class="font-bold text-blue-600 block text-xs">${d.id}</span><span class="text-xs text-gray-500 mb-1 block">${d.estudiante}</span>${bH}</td>
+                    <td class="p-4 text-xs align-top"><div class="bg-white dark:bg-gray-900 p-3 rounded shadow-sm border whitespace-pre-wrap">${hD}</div></td>
+                    <td class="p-4 text-xs align-top"><div class="bg-gray-100 dark:bg-gray-800 p-3 rounded border font-medium">${d.resolucion || '<span class="italic text-gray-400">Sin resolución</span>'}</div></td>
+                    <td class="p-4 text-xs align-top font-semibold">${d.propietario}<span class="block text-gray-600 dark:text-gray-400 mt-1">${d.detalleEstado}</span></td></tr>`;
+            });
+        };
+
+        function renderMovementsTable(allData) {
+            const tbody = document.getElementById('table-movements-body'); tbody.innerHTML = '';
+            const hM = allData.filter(d => d.movimientos >= 3).sort((a,b) => b.movimientos - a.movimientos);
+            if(hM.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Ninguna solicitud transferida ≥3 veces.</td></tr>'; return; }
+            hM.forEach(d => {
+                tbody.innerHTML += `<tr class="hover:bg-orange-50 border-b"><td class="p-4 font-mono text-xs text-blue-600">${d.id}</td><td class="p-4 text-xs">${d.servicio}</td><td class="p-4 text-xs">${d.estudiante}</td>
+                <td class="p-4 text-center font-bold text-lg text-orange-600 bg-orange-50/50">${d.movimientos}</td><td class="p-4 text-xs">${d.propietario}</td><td class="p-4 text-xs font-semibold">${d.estado}</td></tr>`;
+            });
+        }
+
+        function fillTableList(tbId, data, isA) {
+            const tbody = document.getElementById(tbId); tbody.innerHTML = '';
+            data.slice(0,50).forEach(d => {
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="p-3 text-xs text-blue-600">${d.id}</td><td class="p-3 text-xs">${isA? (d.fechaCreacion?.toLocaleDateString()||'-') : d.servicio}</td>
+                <td class="p-3 text-xs">${isA? d.estudiante : `<span class="bg-gray-200 dark:bg-gray-600 px-2 rounded">${d.detalleEstado}</span>`}</td><td class="p-3 text-center text-orange-500 font-bold">${d.movimientos}</td><td class="p-3 text-xs">${d.propietario}</td></tr>`;
+            });
+        }
+
+        function populateUsersDropdown(data) {
+            const s = document.getElementById('user-select'); const c = s.value;
+            const u = [...new Set(data.map(d=>d.propietario))].filter(x=>x && x!=='No Asignado').sort();
+            s.innerHTML = '<option value="">Selecciona un colaborador...</option>';
+            u.forEach(x => { s.innerHTML += `<option value="${x}">${x}</option>`; });
+            if(u.includes(c)) s.value = c;
+        }
+
+        window.updateUserAnalysis = function() {
+            const uN = document.getElementById('user-select').value; const c = document.getElementById('user-stats-container');
+            if(!uN) { c.classList.add('hidden'); return; } else c.classList.remove('hidden');
+            const uD = AppState.resueltasData.filter(d => d.propietario === uN);
+            
+            const sC = {}; let tD = 0, tM = 0, aC = 0;
+            uD.forEach(d => { sC[d.detalleEstado] = (sC[d.detalleEstado]||0)+1; if(d.fechaResolucion&&d.fechaCreacion) tD += Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/(1000*60*60*24)); tM+=d.movimientos; aC+=d.alerts?.length||0; });
+            const topS = Object.entries(sC).sort((a,b)=>b[1]-a[1])[0];
+            
+            document.getElementById('user-total').innerText = uD.length; document.getElementById('user-ratio').innerText = topS?topS[0]:'-';
+            document.getElementById('user-time').innerText = uD.length ? (tD/uD.length).toFixed(1)+' d' : '0 d';
+            document.getElementById('user-moves').innerText = uD.length ? (tM/uD.length).toFixed(1) : '0'; document.getElementById('user-alerts').innerText = aC;
+
+            if(AppState.charts.userResolution) AppState.charts.userResolution.destroy();
+            AppState.charts.userResolution = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(sC), datasets: [{ data: Object.values(sC), backgroundColor: ['#10B981','#EF4444','#F59E0B','#3B82F6','#8B5CF6'] }] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}} });
+
+            const gS = {}; AppState.resueltasData.forEach(d => { if(!gS[d.servicio]) gS[d.servicio]={t:0,c:0,m:0}; gS[d.servicio].c++; gS[d.servicio].m+=d.movimientos; if(d.fechaResolucion&&d.fechaCreacion) gS[d.servicio].t+=Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/86400000); });
+            const sG = {}; uD.forEach(d => { if(!sG[d.servicio]) sG[d.servicio]={c:0,t:0,m:0,s:{}}; sG[d.servicio].c++; sG[d.servicio].m+=d.movimientos; sG[d.servicio].s[d.detalleEstado]=(sG[d.servicio].s[d.detalleEstado]||0)+1; if(d.fechaResolucion&&d.fechaCreacion) sG[d.servicio].t+=Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/86400000); });
+            
+            const tbody = document.getElementById('user-benchmark-body'); tbody.innerHTML = '';
+            Object.keys(sG).sort((a,b)=>sG[b].c-sG[a].c).forEach(serv => {
+                const s = sG[serv]; const uT = s.c?s.t/s.c:0; const uM = s.c?s.m/s.c:0; const gT = gS[serv].c?gS[serv].t/gS[serv].c:0; const gM = gS[serv].c?gS[serv].m/gS[serv].c:0;
+                const sH = Object.entries(s.s).map(([st,cn])=>`<span class="inline-block px-1 border rounded text-[10px] mr-1 mb-1">${st}:${cn}</span>`).join('');
+                const tD = gT?(uT-gT).toFixed(1):0; const mD = gM?(uM-gM).toFixed(1):0;
+                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center text-xs font-bold">${s.c}</td><td class="p-3">${sH}</td>
+                <td class="p-3 text-center text-xs bg-blue-50/20"><span class="font-bold text-blue-600">${uT.toFixed(1)}</span> <span class="text-[10px] text-gray-400">vs ${gT?gT.toFixed(1):'-'}</span><br><span class="text-[10px] ${tD>0?'text-red-500':'text-green-500'}">${tD>0?'+':''}${tD}</span></td>
+                <td class="p-3 text-center text-xs bg-orange-50/20"><span class="font-bold text-orange-600">${uM.toFixed(1)}</span> <span class="text-[10px] text-gray-400">vs ${gM?gM.toFixed(1):'-'}</span><br><span class="text-[10px] ${mD>0?'text-red-500':'text-green-500'}">${mD>0?'+':''}${mD}</span></td></tr>`;
+            });
+        };
+
+        function drawMainCharts(allData, resueltas) {
+            const sC = {}; resueltas.forEach(d => { sC[d.servicio] = (sC[d.servicio]||0)+1; }); const tS = Object.entries(sC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            if(AppState.charts.pieServices) AppState.charts.pieServices.destroy(); AppState.charts.pieServices = new Chart(document.getElementById('chartPieServices'), { type: 'pie', data: { labels: tS.map(s=>s[0]), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'bottom'}} } });
+            
+            const aC = {}; resueltas.forEach(d => { const st = d.detalleEstado||'S/I'; aC[st] = (aC[st]||0)+1; });
+            if(AppState.charts.resolutionType) AppState.charts.resolutionType.destroy(); AppState.charts.resolutionType = new Chart(document.getElementById('chartResolutionType'), { type: 'doughnut', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#F59E0B','#6B7280','#3B82F6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'right'}} } });
+            
+            const stC = {}; resueltas.forEach(d => { if(d.propietario!=='No Asignado') stC[d.propietario] = (stC[d.propietario]||0)+1; }); const topSt = Object.entries(stC).sort((a,b)=>b[1]-a[1]).slice(0,7);
+            if(AppState.charts.barStaff) AppState.charts.barStaff.destroy(); AppState.charts.barStaff = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ label: 'Resueltas', data: topSt.map(s=>s[1]), backgroundColor: '#FBB03B' }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}} } });
+        }
+
+        function drawAlertsCharts() {
+            const aT = {}; const sA = {}; AppState.alertsData.forEach(d => { d.alerts.forEach(a => { aT[a.tipo]=(aT[a.tipo]||0)+1; }); if(d.propietario!=='No Asignado') sA[d.propietario]=(sA[d.propietario]||0)+d.alerts.length; });
+            if(AppState.charts.alertsByType) AppState.charts.alertsByType.destroy(); AppState.charts.alertsByType = new Chart(document.getElementById('chartAlertsByType'), { type: 'pie', data: { labels: Object.keys(aT), datasets: [{ data: Object.values(aT), backgroundColor: ['#EF4444','#F59E0B','#8B5CF6','#EAB308','#EC4899'] }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}} });
+            const sS = Object.entries(sA).sort((a,b)=>b[1]-a[1]).slice(0,10);
+            if(AppState.charts.alertsByStaff) AppState.charts.alertsByStaff.destroy(); AppState.charts.alertsByStaff = new Chart(document.getElementById('chartAlertsByStaff'), { type: 'bar', data: { labels: sS.map(s=>s[0].split(' ')[0]), datasets: [{ data: sS.map(s=>s[1]), backgroundColor: '#EF4444' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}} });
+        }
+
+        function drawMovementsCharts(allData) {
+            const sS = {}; const stS = {}; allData.forEach(d => { if(!sS[d.servicio]) sS[d.servicio]={m:0,c:0}; sS[d.servicio].m+=d.movimientos; sS[d.servicio].c++; if(d.propietario!=='No Asignado'){ if(!stS[d.propietario]) stS[d.propietario]={m:0,c:0}; stS[d.propietario].m+=d.movimientos; stS[d.propietario].c++; } });
+            const topS = Object.entries(sS).map(([n,d])=>({n,a:d.m/d.c})).sort((a,b)=>b.a-a.a).slice(0,5);
+            if(AppState.charts.movementsByService) AppState.charts.movementsByService.destroy(); AppState.charts.movementsByService = new Chart(document.getElementById('chartMovementsByService'), { type:'bar', data: { labels: topS.map(s=>s.n.substring(0,15)), datasets: [{ data: topS.map(s=>s.a), backgroundColor: '#F97316' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}} });
+            const topSt = Object.entries(stS).filter(([n,d])=>d.c>=3).map(([n,d])=>({n,a:d.m/d.c})).sort((a,b)=>b.a-a.a).slice(0,10);
+            if(AppState.charts.movementsByStaff) AppState.charts.movementsByStaff.destroy(); AppState.charts.movementsByStaff = new Chart(document.getElementById('chartMovementsByStaff'), { type:'bar', data: { labels: topSt.map(s=>s.n.split(' ')[0]), datasets: [{ data: topSt.map(s=>s.a), backgroundColor: '#FB923C' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}} });
+        }
+    </script>
+</body>
+</html>
