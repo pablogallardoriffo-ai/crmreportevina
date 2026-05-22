@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Analítico de Solicitudes - Duoc UC</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,10 +14,17 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif']
+                    },
                     colors: {
                         duoc: {
-                            blue: '#00274B', lightBlue: '#003A6E', yellow: '#FBB03B', darkYellow: '#E59B28'
+                            blue: '#00274B',
+                            lightBlue: '#003A6E',
+                            yellow: '#FBB03B',
+                            darkYellow: '#E59B28',
+                            bg: '#F5F6F8'
                         }
                     }
                 }
@@ -29,180 +36,203 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        .toggle-checkbox:checked { right: 0; border-color: #4ade80; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #4ade80; }
+        /* Estilos personalizados para Switch Modo Oscuro y Scrollbars */
+        .toggle-checkbox:checked { right: 0; border-color: #FBB03B; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #FBB03B; }
         .toggle-checkbox { right: 0; z-index: 1; border-color: #e5e7eb; transition: all 0.3s; }
         .toggle-label { background-color: #e5e7eb; transition: all 0.3s; }
+        
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Resaltados de texto para auditoría */
+        .highlight-red { background-color: #fecaca; color: #991b1b; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+        .highlight-purple { background-color: #e9d5ff; color: #6b21a8; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+        .highlight-pink { background-color: #fbcfe8; color: #9d174d; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+        .highlight-yellow { background-color: #fef08a; color: #854d0e; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+        .highlight-cyan { background-color: #a5f3fc; color: #164e63; padding: 0 4px; border-radius: 4px; font-weight: 600; text-decoration: underline wavy red; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 flex h-screen overflow-hidden">
+<body class="bg-duoc-bg text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 flex h-screen overflow-hidden">
 
-    <aside class="w-64 bg-duoc-blue text-white flex flex-col justify-between shadow-xl z-10 flex-shrink-0">
+    <!-- Sidebar Lateral Izquierdo -->
+    <aside class="w-64 bg-white dark:bg-gray-800 flex flex-col justify-between shadow-lg z-20 flex-shrink-0 border-r border-gray-200 dark:border-gray-700">
         <div>
-            <div class="p-6 border-b border-duoc-lightBlue flex items-center gap-3">
-                <div class="w-10 h-10 bg-duoc-yellow rounded-lg flex items-center justify-center font-bold text-duoc-blue text-xl">D</div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">Sede Viña del Mar</h1>
-                    <p class="text-xs text-duoc-yellow">Análisis de Solicitudes</p>
-                </div>
+            <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                <h1 class="font-display font-black text-2xl text-duoc-blue dark:text-white leading-none tracking-tight">DUOC<span class="text-duoc-yellow">UC</span></h1>
+                <p class="text-xs font-semibold text-gray-400 mt-1 uppercase tracking-wider">Viña del Mar</p>
             </div>
-            <nav class="p-4 space-y-2 mt-2">
-                <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn active bg-duoc-lightBlue" data-target="dashboard"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard Principal</button>
-                <button onclick="switchTab('database')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="database"><i class="fa-solid fa-database w-5"></i> Actualizar Datos</button>
-                <button onclick="switchTab('users')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="users"><i class="fa-solid fa-users-gear w-5"></i> Análisis Colaboradores</button>
-                <button onclick="switchTab('incongruences')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn text-duoc-yellow" data-target="incongruences"><i class="fa-solid fa-triangle-exclamation w-5"></i> Alertas Críticas</button>
-                <button onclick="switchTab('movements')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn text-orange-400" data-target="movements"><i class="fa-solid fa-shuffle w-5"></i> Movimientos Internos</button>
-                <button onclick="switchTab('resolved')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="resolved"><i class="fa-solid fa-check-double w-5"></i> Bandeja Resueltas</button>
-                <button onclick="switchTab('active')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-duoc-lightBlue transition-colors tab-btn" data-target="active"><i class="fa-solid fa-clock-rotate-left w-5"></i> Bandeja Activas</button>
+            <nav class="p-4 space-y-1 mt-2">
+                <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors tab-btn active bg-duoc-blue text-white shadow-md font-medium" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5"></i> General
+                </button>
+                <button onclick="switchTab('database')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium" data-target="database">
+                    <i class="fa-solid fa-cloud-arrow-up w-5"></i> Cargar Datos
+                </button>
+                <button onclick="switchTab('users')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors tab-btn text-gray-600 dark:text-gray-300 font-medium" data-target="users">
+                    <i class="fa-solid fa-user-tie w-5"></i> Colaboradores
+                </button>
+                <button onclick="switchTab('incongruences')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors tab-btn text-red-600 dark:text-red-400 font-bold" data-target="incongruences">
+                    <i class="fa-solid fa-triangle-exclamation w-5"></i> Alertas Críticas
+                </button>
+                <button onclick="switchTab('movements')" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors tab-btn text-orange-600 dark:text-orange-400 font-medium" data-target="movements">
+                    <i class="fa-solid fa-shuffle w-5"></i> Movimientos
+                </button>
             </nav>
-        </div>
-        <div class="p-6 border-t border-duoc-lightBlue text-sm text-gray-400">
-            <p>Plataforma Interna v4.0 (Full)</p>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-100 dark:bg-[#0f172a]">
-        <header class="bg-white dark:bg-gray-800 shadow-sm px-8 py-4 flex justify-between items-center z-10 transition-colors duration-300">
-            <h2 id="page-title" class="text-2xl font-semibold text-duoc-blue dark:text-white">Dashboard General</h2>
+    <!-- Área Principal -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <!-- Topbar Estilo Duoc (Imagen Referencia) -->
+        <header class="bg-duoc-blue text-white shadow-md px-8 py-4 flex justify-between items-center z-10 flex-shrink-0">
+            <div>
+                <p class="text-xs font-semibold text-duoc-yellow uppercase tracking-wider mb-1">Coordinación Docente - Sede Viña del Mar</p>
+                <h2 id="page-title" class="text-xl font-display font-bold">¡Hola! Analiza los datos de hoy.</h2>
+            </div>
+            
             <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-sun text-gray-400 dark:text-yellow-400"></i>
-                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                        <label for="theme-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                <!-- Toggle Theme minimalist -->
+                <div class="flex items-center gap-2 bg-duoc-lightBlue px-3 py-1.5 rounded-full border border-blue-800">
+                    <i class="fa-solid fa-sun text-yellow-300 text-xs"></i>
+                    <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer"/>
+                        <label for="theme-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-blue-900 cursor-pointer"></label>
                     </div>
-                    <i class="fa-solid fa-moon text-gray-400 dark:text-blue-400"></i>
+                    <i class="fa-solid fa-moon text-gray-300 text-xs"></i>
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-6 lg:p-8 2xl:p-12">
+        <!-- Contenedor con Scroll -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8">
             <div class="max-w-[1600px] mx-auto w-full">
             
+            <!-- DASHBOARD PRINCIPAL -->
             <div id="tab-dashboard" class="tab-content active">
-                <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-blue-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Solicitudes</p>
-                        <h3 id="kpi-total" class="text-2xl font-bold text-gray-800 dark:text-white">0</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-duoc-blue">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">Total Casos</p>
+                        <h3 id="kpi-total" class="font-display text-3xl font-black text-gray-800 dark:text-white">0</h3>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-green-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Resueltas vs Activas</p>
-                        <h3 id="kpi-resolved" class="text-2xl font-bold text-green-600 dark:text-green-400">0 <span class="text-sm text-gray-400">/ 0</span></h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-green-500">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">Resueltos</p>
+                        <h3 id="kpi-resolved" class="font-display text-3xl font-black text-green-600">0</h3>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-duoc-yellow">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">% Aprobadas</p>
-                        <h3 id="kpi-approved" class="text-2xl font-bold text-duoc-darkYellow">0%</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-duoc-yellow">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">% Aprobación</p>
+                        <h3 id="kpi-approved" class="font-display text-3xl font-black text-duoc-darkYellow">0%</h3>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-red-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Q Rechazadas/Cancel</p>
-                        <h3 id="kpi-rejected" class="text-2xl font-bold text-red-600 dark:text-red-400">0</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-red-500">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">Rechazadas</p>
+                        <h3 id="kpi-rejected" class="font-display text-3xl font-black text-red-600">0</h3>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-purple-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Tiem. Promedio</p>
-                        <h3 id="kpi-time" class="text-2xl font-bold text-purple-600 dark:text-purple-400">0 d</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-purple-500">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">Tiem. Prom.</p>
+                        <h3 id="kpi-time" class="font-display text-3xl font-black text-purple-600">0 d</h3>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 border-orange-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Prom. Movimientos (AG)</p>
-                        <h3 id="kpi-moves" class="text-2xl font-bold text-orange-600 dark:text-orange-400">0</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-b-4 border-orange-500">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">Movimientos</p>
+                        <h3 id="kpi-moves" class="font-display text-3xl font-black text-orange-600">0</h3>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Servicios Nivel 2</h4>
-                        <div class="relative h-64 w-full"><canvas id="chartPieServices"></canvas></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Top Servicios Solicitados</h4>
+                        <div class="relative h-64 2xl:h-80 w-full"><canvas id="chartPieServices"></canvas></div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Detalle de Resolución (Col. AB)</h4>
-                        <div class="relative h-64 w-full"><canvas id="chartResolutionType"></canvas></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Distribución Resoluciones (AB)</h4>
+                        <div class="relative h-64 2xl:h-80 w-full"><canvas id="chartResolutionType"></canvas></div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Colaboradores (Volumen)</h4>
-                        <div class="relative h-64 w-full"><canvas id="chartBarStaff"></canvas></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Volumen por Colaborador</h4>
+                        <div class="relative h-64 2xl:h-80 w-full"><canvas id="chartBarStaff"></canvas></div>
                     </div>
                 </div>
             </div>
 
+            <!-- BASE DE DATOS -->
             <div id="tab-database" class="tab-content">
-                <div class="mb-8">
-                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Gestión de Bases de Datos</h3>
-                    <p class="text-gray-500 dark:text-gray-400">Sube tus archivos Excel (.xlsx/.xls/.csv). El panel consolidará los datos para todo el análisis.</p>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-t-4 border-green-500">
-                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2">1. Archivo de Resueltas</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Solicitudes cerradas, aprobadas, rechazadas.</p>
-                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-green-900/30 dark:file:text-green-400 dark:text-gray-300" onchange="handleFileUpload(event, 'resueltas')" />
-                        <div id="status-resueltas" class="mt-4 text-xs font-medium text-gray-500">Esperando archivo...</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-duoc-blue transition">
+                        <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-4"></i>
+                        <h4 class="font-bold text-lg mb-2">Cargar Excel Resueltas</h4>
+                        <p class="text-sm text-gray-500 mb-4">Sube el archivo de solicitudes finalizadas.</p>
+                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-duoc-blue hover:file:bg-blue-100 cursor-pointer" onchange="handleFileUpload(event, 'resueltas')" />
+                        <div id="status-resueltas" class="mt-4 text-sm font-semibold text-gray-500">Esperando archivo...</div>
                     </div>
-
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-t-4 border-duoc-yellow">
-                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2">2. Archivo de Activas</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Solicitudes en proceso o derivadas.</p>
-                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 dark:file:bg-yellow-900/30 dark:file:text-yellow-400 dark:text-gray-300" onchange="handleFileUpload(event, 'activas')" />
-                        <div id="status-activas" class="mt-4 text-xs font-medium text-gray-500">Esperando archivo...</div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm text-center border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-duoc-yellow transition">
+                        <i class="fa-solid fa-clock-rotate-left text-4xl text-duoc-yellow mb-4"></i>
+                        <h4 class="font-bold text-lg mb-2">Cargar Excel Activas</h4>
+                        <p class="text-sm text-gray-500 mb-4">Sube el archivo de solicitudes en proceso.</p>
+                        <input type="file" accept=".xlsx, .xls, .csv" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 cursor-pointer" onchange="handleFileUpload(event, 'activas')" />
+                        <div id="status-activas" class="mt-4 text-sm font-semibold text-gray-500">Esperando archivo...</div>
                     </div>
                 </div>
             </div>
 
+            <!-- ANÁLISIS DE COLABORADORES -->
             <div id="tab-users" class="tab-content">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row items-center gap-4 border-l-4 border-duoc-blue">
-                    <label class="font-semibold text-gray-700 dark:text-gray-200 min-w-max">Auditar Colaborador:</label>
-                    <select id="user-select" class="w-full md:w-96 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-duoc-yellow" onchange="updateUserAnalysis()">
-                        <option value="">Selecciona un colaborador...</option>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-4">
+                    <label class="font-bold text-gray-700 dark:text-gray-200">Seleccionar Colaborador:</label>
+                    <select id="user-select" class="w-full sm:w-96 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 rounded font-medium focus:ring-2 focus:ring-duoc-blue" onchange="updateUserAnalysis()">
+                        <option value="">Seleccione un funcionario...</option>
                     </select>
                 </div>
 
                 <div id="user-stats-container" class="hidden">
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Volumen Atendido</p>
-                            <h3 id="user-total" class="text-3xl font-bold text-duoc-blue dark:text-blue-400">0</h3>
+                            <p class="text-xs text-gray-500 font-bold uppercase">Casos</p>
+                            <h3 id="user-total" class="font-display text-3xl font-black text-duoc-blue">0</h3>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-green-500">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Estado Principal</p>
-                            <h3 id="user-ratio" class="text-xl font-bold text-gray-800 dark:text-white truncate">-</h3>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
+                            <p class="text-xs text-gray-500 font-bold uppercase">Aprobación</p>
+                            <h3 id="user-ratio" class="font-display text-2xl font-black mt-1">0%</h3>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-duoc-yellow">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tiempo Promedio</p>
-                            <h3 id="user-time" class="text-3xl font-bold text-duoc-darkYellow">0 d</h3>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
+                            <p class="text-xs text-gray-500 font-bold uppercase">Tiem. Promedio</p>
+                            <h3 id="user-time" class="font-display text-3xl font-black text-duoc-darkYellow">0d</h3>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-orange-500">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Prom. Movimientos</p>
-                            <h3 id="user-moves" class="text-3xl font-bold text-orange-500">0</h3>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
+                            <p class="text-xs text-gray-500 font-bold uppercase">Prom. Derivación</p>
+                            <h3 id="user-moves" class="font-display text-3xl font-black text-orange-500">0</h3>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center border-b-4 border-red-500 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onclick="switchTab('incongruences')">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Alertas Detectadas</p>
-                            <h3 id="user-alerts" class="text-3xl font-bold text-red-500">0</h3>
+                        <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 shadow-sm text-center border border-red-200 cursor-pointer" onclick="switchTab('incongruences')">
+                            <p class="text-xs text-red-600 font-bold uppercase">Alertas Críticas</p>
+                            <h3 id="user-alerts" class="font-display text-3xl font-black text-red-600">0</h3>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm lg:col-span-1">
-                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Todos sus Estados (AB)</h4>
-                            <div class="relative h-64 w-full flex justify-center"><canvas id="chartUserResolution"></canvas></div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <h4 class="font-semibold mb-4">Estados Utilizados</h4>
+                            <div class="relative h-64"><canvas id="chartUserResolution"></canvas></div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm overflow-hidden lg:col-span-2 flex flex-col h-full">
-                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Benchmark Comparativo vs Sede</h4>
-                            <div class="overflow-y-auto flex-1">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
-                                        <tr class="text-gray-600 dark:text-gray-300 text-xs">
-                                            <th class="p-3">Servicio</th><th class="p-3 text-center">Casos</th><th class="p-3">Estados</th>
-                                            <th class="p-3 text-center bg-blue-50/50 dark:bg-gray-800">Tiempos</th>
-                                            <th class="p-3 text-center bg-orange-50/50 dark:bg-gray-800">Movs.</th>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 lg:col-span-2 overflow-hidden flex flex-col">
+                            <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200"><h4 class="font-semibold">Benchmark Comparativo vs Sede</h4></div>
+                            <div class="overflow-y-auto flex-1 p-0">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white dark:bg-gray-800 sticky top-0 border-b">
+                                        <tr class="text-gray-500">
+                                            <th class="p-3">Servicio</th>
+                                            <th class="p-3 text-center">Casos</th>
+                                            <th class="p-3 text-center">Aprob/Rechaz</th>
+                                            <th class="p-3 text-center">Tiempo (vs Sede)</th>
+                                            <th class="p-3 text-center">Movs (vs Sede)</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="user-benchmark-body" class="text-xs divide-y divide-gray-100 dark:divide-gray-700"></tbody>
+                                    <tbody id="user-benchmark-body" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -210,54 +240,47 @@
                 </div>
             </div>
 
+            <!-- ALERTAS CRÍTICAS -->
             <div id="tab-incongruences" class="tab-content">
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6 shadow-sm">
+                <div class="bg-white dark:bg-gray-800 border-l-4 border-red-500 rounded-xl p-6 mb-6 shadow-sm">
                     <div class="flex items-start gap-4">
-                        <i class="fa-solid fa-brain text-3xl text-duoc-blue dark:text-blue-400 mt-1"></i>
-                        <div class="w-full">
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-3">Alertas Críticas (Motor de Riesgos)</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
-                                <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-100"><span class="font-bold text-red-700 block">1. Deserción Oculta</span>Pide renuncia/baja en Suspensión.</div>
-                                <div class="bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-100"><span class="font-bold text-orange-700 block">2. Rechazo sin Justificar</span>Texto vacío o genérico.</div>
-                                <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded border border-purple-100"><span class="font-bold text-purple-700 block">3. Riesgo Legal</span>Palabras: Sernac, demanda, estafa.</div>
-                                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-100"><span class="font-bold text-yellow-700 block">4. Duda Financiera</span>Menciona CAE/Beca mal tipificado.</div>
-                                <div class="bg-pink-50 dark:bg-pink-900/20 p-3 rounded border border-pink-100"><span class="font-bold text-pink-700 block">5. Quejas / Demoras</span>Acusa: "se demoran", "flojo", "mala atención".</div>
+                        <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Motor de Alertas Críticas y Ortografía</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">El algoritmo analiza semánticamente el texto del alumno y la respuesta del funcionario buscando 6 patrones de riesgo. Omite tildes para mayor precisión en faltas ortográficas.</p>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded">1. Deserción Oculta</span>
+                                <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded">2. Rechazo sin Justificar</span>
+                                <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded">3. Riesgo Legal</span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">4. Duda Financiera</span>
+                                <span class="px-2 py-1 bg-pink-100 text-pink-800 text-xs font-bold rounded">5. Quejas Personal</span>
+                                <span class="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs font-bold rounded border border-cyan-300">6. Falta Ortografía Grave (Funcionario)</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Riesgo por Tipo</h4>
-                        <div class="relative h-48 w-full"><canvas id="chartAlertsByType"></canvas></div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm lg:col-span-2">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Alertas por Colaborador</h4>
-                        <div class="relative h-48 w-full"><canvas id="chartAlertsByStaff"></canvas></div>
-                    </div>
-                </div>
-                
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-750">
-                        <h4 class="text-lg font-bold text-gray-800 dark:text-white">Registro de Alertas</h4>
-                        <select id="filter-alert-type" class="p-2 border rounded text-sm focus:ring-2 focus:ring-duoc-yellow dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="renderAlertsView()">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="p-4 bg-gray-50 dark:bg-gray-750 border-b flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h4 class="font-bold text-lg">Registro de Auditoría</h4>
+                        <select id="filter-alert-type" class="p-2 border rounded text-sm bg-white font-medium" onchange="renderAlertsView()">
                             <option value="all">Todas las Alertas</option>
                             <option value="Deserción Oculta">Deserción Oculta</option>
                             <option value="Rechazo sin Justificar">Rechazo sin Justificar</option>
-                            <option value="Riesgo Legal / Reclamo">Riesgo Legal / Reclamo Grave</option>
-                            <option value="Duda Financiera Oculta">Duda Financiera Oculta</option>
-                            <option value="Queja hacia Personal">Quejas hacia Personal</option>
+                            <option value="Riesgo Legal / Reclamo">Riesgo Legal</option>
+                            <option value="Duda Financiera Oculta">Duda Financiera</option>
+                            <option value="Queja hacia Personal">Quejas Personal</option>
+                            <option value="Ortografía Funcionario">Ortografía Funcionario</option>
                         </select>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                    <th class="p-4 w-1/5">Solicitud / Riesgo</th>
-                                    <th class="p-4 w-1/4">Descripción del Alumno</th>
-                                    <th class="p-4 w-1/3">Texto Resolución (Col. AC)</th>
-                                    <th class="p-4">Resolutor / Estado AB</th>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600">
+                                <tr>
+                                    <th class="p-4 w-1/5">Solicitud / Alertas</th>
+                                    <th class="p-4 w-1/3">Texto del Alumno</th>
+                                    <th class="p-4 w-1/3">Respuesta del Funcionario (Col. AC)</th>
+                                    <th class="p-4">Funcionario</th>
                                 </tr>
                             </thead>
                             <tbody id="table-alerts-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
@@ -266,63 +289,27 @@
                 </div>
             </div>
 
+            <!-- MOVIMIENTOS INTERNOS -->
             <div id="tab-movements" class="tab-content">
-                <div class="bg-white dark:bg-gray-800 border border-orange-200 rounded-xl p-6 mb-6 shadow-sm">
-                    <div class="flex items-start gap-4">
-                        <i class="fa-solid fa-people-arrows text-3xl text-orange-500 mt-1"></i>
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Movimientos Internos (Columna AG)</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Audita transferencias o "peloteos" de solicitudes.</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Servicios más Derivados</h4>
-                        <div class="relative h-64 w-full"><canvas id="chartMovementsByService"></canvas></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h4 class="font-semibold mb-4">Servicios con más derivaciones</h4>
+                        <div class="relative h-64"><canvas id="chartMovementsByService"></canvas></div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-4">Top Colaboradores que Derivan</h4>
-                        <div class="relative h-64 w-full"><canvas id="chartMovementsByStaff"></canvas></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h4 class="font-semibold mb-4">Funcionarios que más derivan</h4>
+                        <div class="relative h-64"><canvas id="chartMovementsByStaff"></canvas></div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-200"><h4 class="text-lg font-bold">🚨 Salón de la Burocracia (≥ 3 Movimientos)</h4></div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                    <div class="p-4 bg-gray-50 border-b"><h4 class="font-bold text-lg text-orange-600">🚨 Salón de la Burocracia (≥ 3 Movimientos)</h4></div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                    <th class="p-4">N° Solicitud</th><th class="p-4">Servicio N2</th><th class="p-4">Estudiante</th>
-                                    <th class="p-4 text-center text-orange-600">N° Movs (AG)</th><th class="p-4">Último Propietario</th><th class="p-4">Estado</th>
-                                </tr>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 text-gray-600">
+                                <tr><th class="p-3">ID</th><th class="p-3">Servicio</th><th class="p-3">Estudiante</th><th class="p-3 text-center text-orange-600">Movs</th><th class="p-3">Último Dueño</th><th class="p-3">Estado</th></tr>
                             </thead>
-                            <tbody id="table-movements-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-resolved" class="tab-content">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">Bandeja Histórica (Resueltas)</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3">ID</th><th class="p-3">Servicio N2</th><th class="p-3">Resolución (AB)</th><th class="p-3 text-center">Movs (AG)</th><th class="p-3">Propietario</th></tr></thead>
-                            <tbody id="table-resolved-body" class="divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-active" class="tab-content">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">Bandeja Activas</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3">ID</th><th class="p-3">Fecha</th><th class="p-3">Estudiante</th><th class="p-3 text-center">Movs (AG)</th><th class="p-3">Propietario</th></tr></thead>
-                            <tbody id="table-active-body" class="divide-y divide-gray-200"></tbody>
+                            <tbody id="table-movements-body" class="divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
                 </div>
@@ -335,29 +322,25 @@
     <script>
         const AppState = { resueltasData: [], activasData: [], alertsData: [], charts: {} };
 
-        // Datos Mock para visualización inicial
-        const mockData = [
-            {
-                id: "CAS-3984220", servicio: "SUSPENSION", estudiante: "NAHIR HUNT",
-                descripcion: "quiero renunciar a la carrera porque me cambiaré de ciudad.", propietario: "Antonio Carrasco",
-                estado: "Resuelto", fechaCreacion: new Date("2026-02-05"), fechaResolucion: new Date("2026-02-06"),
-                carrera: "INFORMÁTICA", detalleEstado: "Rechazado", resolucion: "Se rechaza, alumno no tiene derecho a suspensión.", movimientos: 3, type: 'resueltas'
-            },
-            {
-                id: "CAS-7778889", servicio: "TOMA DE RAMOS", estudiante: "CAMILA ROJAS",
-                descripcion: "El coordinador es un flojo, se demora en responder y la mala atencion es increible.", propietario: "Bryan Valenzuela",
-                estado: "En proceso", fechaCreacion: new Date("2026-05-21"), fechaResolucion: null,
-                carrera: "MARKETING", detalleEstado: "Derivado", resolucion: "", movimientos: 5, type: 'activas'
-            }
-        ];
+        // Diccionario de ortografía sin tildes para la validación
+        // Clave: Palabra mal escrita (sin tildes). Valor: Corrección ideal.
+        const dictionaryMistakes = {
+            "haci": "así", "haiga": "haya", "iva": "iba", "hir": "ir",
+            "acer": "hacer", "aber": "haber", "desicion": "decisión", "decicion": "decisión",
+            "nesesito": "necesito", "exelente": "excelente", "atravez": "a través",
+            "expectacular": "espectacular", "hubieron": "hubo", "impresindible": "imprescindible",
+            "hize": "hice", "valla": "vaya", "alluda": "ayuda", "asta": "hasta",
+            "asiendo": "haciendo", "boy": "voy", "aser": "hacer", "habrir": "abrir",
+            "hiba": "iba", "hacerlo": "hacerlo", "nesecario": "necesario", "preveer": "prever",
+            "bacia": "vacía", "bacio": "vacío", "hechar": "echar", "llendo": "yendo"
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('theme-toggle').addEventListener('change', (e) => {
                 e.target.checked ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
                 updateDashboards();
             });
-            AppState.resueltasData = mockData.filter(d => d.type === 'resueltas').map(d => ({...d, alerts: detectAlerts(d)}));
-            AppState.activasData = mockData.filter(d => d.type === 'activas').map(d => ({...d, alerts: detectAlerts(d)}));
+            // Init con mockup basico
             updateDashboards();
         });
 
@@ -365,18 +348,22 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${targetId}`).classList.add('active');
             document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('bg-duoc-lightBlue', 'border-l-4', 'border-duoc-yellow', 'text-orange-400');
-                if(b.dataset.target === targetId) b.classList.add('bg-duoc-lightBlue', 'border-l-4', 'border-duoc-yellow');
-                if(b.dataset.target === 'movements' && targetId !== 'movements') b.classList.add('text-orange-400');
+                b.classList.remove('bg-duoc-blue', 'text-white', 'shadow-md');
+                b.classList.add('text-gray-600', 'dark:text-gray-300');
+                if(b.dataset.target === targetId) {
+                    b.classList.add('bg-duoc-blue', 'text-white', 'shadow-md');
+                    b.classList.remove('text-gray-600', 'dark:text-gray-300');
+                }
             });
         }
 
+        // Lector de Archivos: Anti-Hang implementando lectura por índice exacto
         function handleFileUpload(event, type) {
             const file = event.target.files[0];
             if (!file) return;
 
             const statusDiv = document.getElementById(`status-${type}`);
-            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Procesando, por favor espera...';
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-duoc-blue"></i> Analizando matriz de datos...';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -385,205 +372,337 @@
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // Leer como Matriz 2D para garantizar acceso a las columnas por su Letra (A=0, B=1... AB=27, AC=28, AG=32)
+                    // LECTURA DIRECTA POR ARRAY: Evita problemas de nombres de columnas largos
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
                     
-                    if(rows.length < 2) throw new Error("Archivo vacío o sin datos.");
+                    if(rows.length < 2) throw new Error("Archivo sin datos");
 
-                    // Ignoramos la primera fila (encabezados) y mapeamos directamente a tus columnas especificadas:
-                    // D(3)=ID, F(5)=Servicio, J(9)=Contacto, K(10)=Descripción, L(11)=Propietario, M(12)=Estado
-                    // N(13)=FechaC, O(14)=FechaR, P(15)=Carrera, AB(27)=Detalle, AC(28)=Resolución, AG(32)=Movimientos
                     const processedData = [];
-                    for(let i=1; i<rows.length; i++) {
-                        const row = rows[i];
-                        if(!row[3]) continue; // Si no hay ID, saltar fila
+                    // Saltamos la fila 0 (Cabeceras)
+                    for (let i = 1; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (!r[3]) continue; // Si no hay ID de solicitud (Col D = Index 3), ignorar
                         
-                        let dObj = {
-                            id: String(row[3]),
-                            servicio: String(row[5] || 'General'),
-                            estudiante: String(row[9] || 'S/N'),
-                            descripcion: String(row[10] || '').toLowerCase(),
-                            propietario: String(row[11] || 'No Asignado'),
-                            estado: String(row[12] || (type === 'activas' ? 'Activa' : 'Resuelto')),
-                            fechaCreacion: row[13] ? new Date(row[13]) : null,
-                            fechaResolucion: row[14] ? new Date(row[14]) : null,
-                            carrera: String(row[15] || 'S/I'),
-                            detalleEstado: String(row[27] || '').trim(), // Columna AB
-                            resolucion: String(row[28] || '').trim(),    // Columna AC
-                            movimientos: parseInt(row[32]) || 0,         // Columna AG
+                        // Parseo seguro de Fechas
+                        const parseDate = (val) => val ? (val instanceof Date ? val : new Date(val)) : null;
+
+                        let obj = {
+                            id: String(r[3]),                           // Col D
+                            servicio: String(r[5] || 'General'),        // Col F
+                            estudiante: String(r[9] || 'Sin Nombre'),   // Col J
+                            descripcion: String(r[10] || ''),           // Col K
+                            propietario: String(r[11] || 'Sin Asignar'),// Col L
+                            estado: String(r[12] || (type === 'activas' ? 'En proceso' : 'Resuelto')), // Col M
+                            fechaCreacion: parseDate(r[13]),            // Col N
+                            fechaResolucion: parseDate(r[14]),          // Col O
+                            carrera: String(r[15] || ''),               // Col P
+                            detalleEstado: String(r[27] || ''),         // Col AB
+                            resolucion: String(r[28] || ''),            // Col AC
+                            movimientos: parseInt(r[32]) || 0,          // Col AG
                             type: type
                         };
-                        dObj.alerts = detectAlerts(dObj);
-                        processedData.push(dObj);
+                        
+                        obj.alerts = detectAlerts(obj);
+                        processedData.push(obj);
                     }
 
                     if(type === 'resueltas') AppState.resueltasData = processedData;
                     else AppState.activasData = processedData;
 
-                    statusDiv.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> ¡Listo! ${processedData.length} registros cargados correctamente.`;
+                    statusDiv.innerHTML = `<i class="fa-solid fa-check text-green-600"></i> Cargados ${processedData.length} registros.`;
                     updateDashboards();
-                    setTimeout(() => switchTab('dashboard'), 1000);
+                    setTimeout(() => switchTab('dashboard'), 800);
                 } catch (err) {
-                    statusDiv.innerHTML = `<i class="fa-solid fa-xmark text-red-500"></i> Error de formato. Asegúrate de subir el archivo exportado original.`;
+                    statusDiv.innerHTML = `<i class="fa-solid fa-xmark text-red-600"></i> Error formato: ${err.message}`;
                     console.error(err);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
+        // Motor Inteligente de Alertas y Faltas de Ortografía
         function detectAlerts(d) {
             let alerts = [];
-            const desc = d.descripcion; const res = d.resolucion.toLowerCase(); const serv = d.servicio.toUpperCase(); const estadoDetalle = d.detalleEstado.toLowerCase();
+            const descOrig = d.descripcion || '';
+            const resOrig = d.resolucion || '';
+            
+            const desc = descOrig.toLowerCase();
+            const res = resOrig.toLowerCase();
+            const serv = (d.servicio || '').toUpperCase();
+            const estadoDetalle = (d.detalleEstado || '').toLowerCase();
 
+            // 1. Deserción Oculta
             if (serv.includes('SUSPENSION') && (desc.includes('renuncia') || desc.includes('retiro') || desc.includes('baja'))) {
-                alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300' });
+                alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border border-red-300', matchTarget: 'desc', matchWords: ['renuncia', 'retiro', 'baja'] });
             }
+
+            // 2. Rechazo Injustificado
             if (estadoDetalle.includes('rechaz') || estadoDetalle.includes('cancel')) {
-                if (res.length < 15 || res === 'n/a' || res === 'rechazado') alerts.push({ tipo: 'Rechazo sin Justificar', clase: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300' });
+                if (res.length < 15 || res === 'n/a' || res.includes('sin texto')) {
+                    alerts.push({ tipo: 'Rechazo sin Justificar', clase: 'bg-orange-100 text-orange-800 border border-orange-300' });
+                }
             }
-            if (desc.includes('sernac') || desc.includes('demanda') || desc.includes('abogado') || desc.includes('estafa') || desc.includes('ministerio') || desc.includes('indignado')) {
-                alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300' });
+
+            // 3. Riesgo Legal
+            const legalKeywords = ['sernac', 'demanda', 'abogado', 'estafa', 'ministerio', 'superintendencia'];
+            let legalMatched = legalKeywords.find(k => desc.includes(k));
+            if (legalMatched) {
+                alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border border-purple-300', matchTarget: 'desc', matchWords: [legalMatched] });
             }
-            if ((desc.includes('gratuidad') || desc.includes('cae ') || desc.includes('beca')) && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
-                alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300' });
+
+            // 4. Duda Financiera
+            const finKeywords = ['gratuidad', 'cae', 'beca', 'cobro indebido'];
+            let finMatched = finKeywords.find(k => desc.includes(k));
+            if (finMatched && !serv.includes('ARANCEL') && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
+                alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border border-yellow-300', matchTarget: 'desc', matchWords: [finMatched] });
             }
-            const qK = ['flojo','mala atencion','mala atención','pesimo','pésimo','se demora','se demoraron','no responde','aún no responden','llevo dias','mucho tiempo','ninguna respuesta','cero empatia','me tramitan','falta de respeto','maltrato','grosero'];
-            let mK = null;
-            if (qK.some(k => { if(desc.includes(k)){ mK = k; return true; } return false; })) {
-                alerts.push({ tipo: 'Queja hacia Personal', matched: mK, clase: 'bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-900/50 dark:text-pink-300' });
+
+            // 5. Quejas Personal
+            const quejasKws = ['flojo', 'mala atencion', 'pesimo', 'se demora', 'no responde', 'mucho tiempo', 'ninguna respuesta', 'cero empatia', 'me tramitan', 'falta de respeto', 'maltrato'];
+            let quejaMatched = quejasKws.find(k => desc.includes(k));
+            if (quejaMatched) {
+                alerts.push({ tipo: 'Queja hacia Personal', clase: 'bg-pink-100 text-pink-800 border border-pink-300', matchTarget: 'desc', matchWords: [quejaMatched] });
             }
+
+            // 6. Ortografía Funcionario (Sin tildes, sin diccionarios externos)
+            if (resOrig.trim().length > 0) {
+                // Función nativa para quitar acentos
+                const removeAccents = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                const normalizedRes = removeAccents(resOrig);
+                
+                // Dividir en palabras ignorando puntuación
+                const words = normalizedRes.split(/[\s,.;:!?()"]+/);
+                
+                let foundMistakes = [];
+                words.forEach(w => {
+                    if (dictionaryMistakes[w]) {
+                        foundMistakes.push(w); // Guardamos la palabra tal como fue encontrada (sin tilde) para buscarla luego
+                    }
+                });
+
+                if (foundMistakes.length > 0) {
+                    alerts.push({ 
+                        tipo: 'Ortografía Funcionario', 
+                        clase: 'bg-cyan-100 text-cyan-800 border border-cyan-400', 
+                        matchTarget: 'res', 
+                        matchWords: [...new Set(foundMistakes)] // Palabras sin tilde detectadas
+                    });
+                }
+            }
+
             return alerts;
         }
 
         function updateDashboards() {
             const allData = [...AppState.resueltasData, ...AppState.activasData];
             if(allData.length === 0) return;
-            const resueltas = AppState.resueltasData, activas = AppState.activasData;
+
+            const resueltas = AppState.resueltasData;
             
+            // KPIs
             const aprobadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('aprob')).length;
-            const rechazadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('rechaz') || d.detalleEstado.toLowerCase().includes('cancel')).length;
+            const rechazadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('rechaz')).length;
             
-            let totalDays = 0, validTimeCount = 0, totalMoves = 0;
+            let totalD = 0, countD = 0, totalM = 0;
             resueltas.forEach(d => {
-                if(d.fechaResolucion && d.fechaCreacion) { totalDays += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion) / (1000*60*60*24)); validTimeCount++; }
-                totalMoves += d.movimientos;
+                if(d.fechaResolucion && d.fechaCreacion) {
+                    totalD += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion) / 86400000); countD++;
+                }
+                totalM += d.movimientos;
             });
 
             document.getElementById('kpi-total').innerText = allData.length;
-            document.getElementById('kpi-resolved').innerHTML = `${resueltas.length} <span class="text-sm">/ ${activas.length} act.</span>`;
+            document.getElementById('kpi-resolved').innerText = resueltas.length;
             document.getElementById('kpi-approved').innerText = resueltas.length ? Math.round((aprobadas/resueltas.length)*100)+'%' : '0%';
             document.getElementById('kpi-rejected').innerText = rechazadas;
-            document.getElementById('kpi-time').innerText = validTimeCount ? (totalDays/validTimeCount).toFixed(1)+' d' : '0 d';
-            document.getElementById('kpi-moves').innerText = resueltas.length ? (totalMoves/resueltas.length).toFixed(1) : '0';
+            document.getElementById('kpi-time').innerText = countD ? (totalD/countD).toFixed(1)+' d' : '0 d';
+            document.getElementById('kpi-moves').innerText = resueltas.length ? (totalM/resueltas.length).toFixed(1) : '0';
 
+            // Alertas y vistas
             AppState.alertsData = allData.filter(d => d.alerts.length > 0);
+            renderAlertsView();
+            renderMovementsTable(allData);
             
-            window.renderAlertsView(); drawAlertsCharts();
-            renderMovementsTable(allData); drawMovementsCharts(allData);
-            fillTableList('table-resolved-body', resueltas); fillTableList('table-active-body', activas, true);
-            populateUsersDropdown(allData); drawMainCharts(allData, resueltas);
+            populateUsers(allData);
+            drawMainCharts(allData, resueltas);
             if(!document.getElementById('user-stats-container').classList.contains('hidden')) updateUserAnalysis();
         }
 
         window.renderAlertsView = function() {
-            const fV = document.getElementById('filter-alert-type').value;
-            const tbody = document.getElementById('table-alerts-body'); tbody.innerHTML = '';
-            let dR = fV === 'all' ? AppState.alertsData : AppState.alertsData.filter(d => d.alerts.some(a => a.tipo === fV));
-            
-            if(dR.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Sin registros bajo este filtro.</td></tr>'; return; }
-            dR.forEach(d => {
-                const bH = d.alerts.filter(a => fV === 'all' || a.tipo === fV).map(a => `<span class="inline-block mt-1 px-2 py-1 rounded text-[10px] font-bold border ${a.clase}">${a.tipo}</span>`).join('<br>');
-                let hD = `"${d.descripcion}"`;
-                d.alerts.forEach(a => { if(a.matched) hD = hD.replace(new RegExp(`(${a.matched})`, 'gi'), `<span class="bg-pink-300 text-pink-900 font-bold px-1 rounded shadow-sm">$1</span>`); });
+            const filter = document.getElementById('filter-alert-type').value;
+            const tbody = document.getElementById('table-alerts-body');
+            tbody.innerHTML = '';
+
+            let data = filter === 'all' ? AppState.alertsData : AppState.alertsData.filter(d => d.alerts.some(a => a.tipo === filter));
+
+            data.forEach(d => {
+                const alertsToProcess = d.alerts.filter(a => filter === 'all' || a.tipo === filter);
+                if (alertsToProcess.length === 0) return;
+
+                const badges = alertsToProcess.map(a => `<span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] ${a.clase}">${a.tipo}</span>`).join('<br>');
                 
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b">
-                    <td class="p-4 align-top"><span class="font-bold text-blue-600 block text-xs">${d.id}</span><span class="text-xs text-gray-500 mb-1 block">${d.estudiante}</span>${bH}</td>
-                    <td class="p-4 text-xs align-top"><div class="bg-white dark:bg-gray-900 p-3 rounded shadow-sm border whitespace-pre-wrap">${hD}</div></td>
-                    <td class="p-4 text-xs align-top"><div class="bg-gray-100 dark:bg-gray-800 p-3 rounded border font-medium">${d.resolucion || '<span class="italic text-gray-400">Sin resolución</span>'}</div></td>
-                    <td class="p-4 text-xs align-top font-semibold">${d.propietario}<span class="block text-gray-600 dark:text-gray-400 mt-1">${d.detalleEstado}</span></td></tr>`;
-            });
-        };
+                // Procesamiento de Resaltado para Descripción (Alumno)
+                let textDesc = d.descripcion ? `"${d.descripcion}"` : '-';
+                alertsToProcess.forEach(a => {
+                    if (a.matchTarget === 'desc' && a.matchWords) {
+                        a.matchWords.forEach(w => {
+                            const regex = new RegExp(`(${w})`, 'gi');
+                            let cls = a.tipo.includes('Legal') ? 'highlight-purple' : (a.tipo.includes('Queja') ? 'highlight-pink' : (a.tipo.includes('Financiera') ? 'highlight-yellow' : 'highlight-red'));
+                            textDesc = textDesc.replace(regex, `<span class="${cls}">$1</span>`);
+                        });
+                    }
+                });
 
-        function renderMovementsTable(allData) {
-            const tbody = document.getElementById('table-movements-body'); tbody.innerHTML = '';
-            const hM = allData.filter(d => d.movimientos >= 3).sort((a,b) => b.movimientos - a.movimientos);
-            if(hM.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Ninguna solicitud transferida ≥3 veces.</td></tr>'; return; }
-            hM.forEach(d => {
-                tbody.innerHTML += `<tr class="hover:bg-orange-50 border-b"><td class="p-4 font-mono text-xs text-blue-600">${d.id}</td><td class="p-4 text-xs">${d.servicio}</td><td class="p-4 text-xs">${d.estudiante}</td>
-                <td class="p-4 text-center font-bold text-lg text-orange-600 bg-orange-50/50">${d.movimientos}</td><td class="p-4 text-xs">${d.propietario}</td><td class="p-4 text-xs font-semibold">${d.estado}</td></tr>`;
+                // Procesamiento de Resaltado para Resolución (Funcionario) - Ignorando Tildes en la busqueda
+                let textRes = d.resolucion ? `"${d.resolucion}"` : '<span class="italic text-gray-400">Sin texto</span>';
+                alertsToProcess.forEach(a => {
+                    if (a.matchTarget === 'res' && a.matchWords) {
+                        a.matchWords.forEach(w => {
+                            // Buscar la palabra original en el texto real.
+                            // Como la palabra 'w' está sin tilde (ej: 'haci'), y el texto real puede tenerla o no (ej 'Hací'), 
+                            // construimos un regex manual que tolere tildes en vocales para encontrar la palabra en el string original.
+                            let regexStr = w.split('').map(char => {
+                                if(char === 'a') return '[aáAÁ]'; if(char === 'e') return '[eéEÉ]';
+                                if(char === 'i') return '[iíIÍ]'; if(char === 'o') return '[oóOÓ]';
+                                if(char === 'u') return '[uúüUÚÜ]'; return char;
+                            }).join('');
+                            const regex = new RegExp(`\\b(${regexStr})\\b`, 'gi');
+                            textRes = textRes.replace(regex, `<span class="highlight-cyan" title="Sugerencia: ${dictionaryMistakes[w]}">$1</span>`);
+                        });
+                    }
+                });
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <td class="p-4 align-top"><div class="font-bold text-duoc-blue dark:text-blue-400 text-xs">${d.id}</div>${badges}</td>
+                        <td class="p-4 text-xs italic text-gray-600 dark:text-gray-300 align-top"><div class="bg-white dark:bg-gray-900 p-3 rounded shadow-sm whitespace-pre-wrap leading-relaxed">${textDesc}</div></td>
+                        <td class="p-4 text-xs font-medium text-gray-800 dark:text-gray-100 align-top"><div class="bg-gray-50 dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 whitespace-pre-wrap leading-relaxed">${textRes}</div></td>
+                        <td class="p-4 text-xs align-top font-bold">${d.propietario}<br><span class="font-normal text-gray-500 rounded bg-gray-200 dark:bg-gray-700 px-1 mt-1 inline-block">${d.detalleEstado}</span></td>
+                    </tr>
+                `;
             });
         }
 
-        function fillTableList(tbId, data, isA) {
-            const tbody = document.getElementById(tbId); tbody.innerHTML = '';
-            data.slice(0,50).forEach(d => {
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="p-3 text-xs text-blue-600">${d.id}</td><td class="p-3 text-xs">${isA? (d.fechaCreacion?.toLocaleDateString()||'-') : d.servicio}</td>
-                <td class="p-3 text-xs">${isA? d.estudiante : `<span class="bg-gray-200 dark:bg-gray-600 px-2 rounded">${d.detalleEstado}</span>`}</td><td class="p-3 text-center text-orange-500 font-bold">${d.movimientos}</td><td class="p-3 text-xs">${d.propietario}</td></tr>`;
-            });
+        // Tabla Movimientos
+        function renderMovementsTable(data) {
+            const tbody = document.getElementById('table-movements-body');
+            const sorted = data.filter(d => d.movimientos >= 3).sort((a,b) => b.movimientos - a.movimientos);
+            tbody.innerHTML = sorted.map(d => `
+                <tr class="border-b">
+                    <td class="p-3 font-mono text-xs text-blue-600">${d.id}</td>
+                    <td class="p-3 text-xs">${d.servicio}</td>
+                    <td class="p-3 text-xs">${d.estudiante}</td>
+                    <td class="p-3 text-center text-orange-600 font-bold bg-orange-50">${d.movimientos}</td>
+                    <td class="p-3 text-xs font-semibold">${d.propietario}</td>
+                    <td class="p-3 text-xs"><span class="bg-gray-200 px-2 py-1 rounded">${d.estado}</span></td>
+                </tr>
+            `).join('');
         }
 
-        function populateUsersDropdown(data) {
-            const s = document.getElementById('user-select'); const c = s.value;
-            const u = [...new Set(data.map(d=>d.propietario))].filter(x=>x && x!=='No Asignado').sort();
-            s.innerHTML = '<option value="">Selecciona un colaborador...</option>';
-            u.forEach(x => { s.innerHTML += `<option value="${x}">${x}</option>`; });
-            if(u.includes(c)) s.value = c;
+        // Colaboradores
+        function populateUsers(data) {
+            const select = document.getElementById('user-select');
+            const val = select.value;
+            const users = [...new Set(data.map(d => d.propietario))].filter(u => u && u!=='Sin Asignar').sort();
+            select.innerHTML = '<option value="">Seleccione un funcionario...</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
+            if(users.includes(val)) select.value = val;
         }
 
         window.updateUserAnalysis = function() {
-            const uN = document.getElementById('user-select').value; const c = document.getElementById('user-stats-container');
-            if(!uN) { c.classList.add('hidden'); return; } else c.classList.remove('hidden');
-            const uD = AppState.resueltasData.filter(d => d.propietario === uN);
-            
-            const sC = {}; let tD = 0, tM = 0, aC = 0;
-            uD.forEach(d => { sC[d.detalleEstado] = (sC[d.detalleEstado]||0)+1; if(d.fechaResolucion&&d.fechaCreacion) tD += Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/(1000*60*60*24)); tM+=d.movimientos; aC+=d.alerts?.length||0; });
-            const topS = Object.entries(sC).sort((a,b)=>b[1]-a[1])[0];
-            
-            document.getElementById('user-total').innerText = uD.length; document.getElementById('user-ratio').innerText = topS?topS[0]:'-';
-            document.getElementById('user-time').innerText = uD.length ? (tD/uD.length).toFixed(1)+' d' : '0 d';
-            document.getElementById('user-moves').innerText = uD.length ? (tM/uD.length).toFixed(1) : '0'; document.getElementById('user-alerts').innerText = aC;
+            const user = document.getElementById('user-select').value;
+            const div = document.getElementById('user-stats-container');
+            if(!user) { div.classList.add('hidden'); return; }
+            div.classList.remove('hidden');
 
-            if(AppState.charts.userResolution) AppState.charts.userResolution.destroy();
-            AppState.charts.userResolution = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(sC), datasets: [{ data: Object.values(sC), backgroundColor: ['#10B981','#EF4444','#F59E0B','#3B82F6','#8B5CF6'] }] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}} });
+            const uData = AppState.resueltasData.filter(d => d.propietario === user);
+            const alerts = AppState.alertsData.filter(d => d.propietario === user).length;
 
-            const gS = {}; AppState.resueltasData.forEach(d => { if(!gS[d.servicio]) gS[d.servicio]={t:0,c:0,m:0}; gS[d.servicio].c++; gS[d.servicio].m+=d.movimientos; if(d.fechaResolucion&&d.fechaCreacion) gS[d.servicio].t+=Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/86400000); });
-            const sG = {}; uD.forEach(d => { if(!sG[d.servicio]) sG[d.servicio]={c:0,t:0,m:0,s:{}}; sG[d.servicio].c++; sG[d.servicio].m+=d.movimientos; sG[d.servicio].s[d.detalleEstado]=(sG[d.servicio].s[d.detalleEstado]||0)+1; if(d.fechaResolucion&&d.fechaCreacion) sG[d.servicio].t+=Math.ceil(Math.abs(d.fechaResolucion-d.fechaCreacion)/86400000); });
+            const aprob = uData.filter(d => d.detalleEstado.toLowerCase().includes('aprob')).length;
+            const rech = uData.filter(d => d.detalleEstado.toLowerCase().includes('rechaz')).length;
             
-            const tbody = document.getElementById('user-benchmark-body'); tbody.innerHTML = '';
-            Object.keys(sG).sort((a,b)=>sG[b].c-sG[a].c).forEach(serv => {
-                const s = sG[serv]; const uT = s.c?s.t/s.c:0; const uM = s.c?s.m/s.c:0; const gT = gS[serv].c?gS[serv].t/gS[serv].c:0; const gM = gS[serv].c?gS[serv].m/gS[serv].c:0;
-                const sH = Object.entries(s.s).map(([st,cn])=>`<span class="inline-block px-1 border rounded text-[10px] mr-1 mb-1">${st}:${cn}</span>`).join('');
-                const tD = gT?(uT-gT).toFixed(1):0; const mD = gM?(uM-gM).toFixed(1):0;
-                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center text-xs font-bold">${s.c}</td><td class="p-3">${sH}</td>
-                <td class="p-3 text-center text-xs bg-blue-50/20"><span class="font-bold text-blue-600">${uT.toFixed(1)}</span> <span class="text-[10px] text-gray-400">vs ${gT?gT.toFixed(1):'-'}</span><br><span class="text-[10px] ${tD>0?'text-red-500':'text-green-500'}">${tD>0?'+':''}${tD}</span></td>
-                <td class="p-3 text-center text-xs bg-orange-50/20"><span class="font-bold text-orange-600">${uM.toFixed(1)}</span> <span class="text-[10px] text-gray-400">vs ${gM?gM.toFixed(1):'-'}</span><br><span class="text-[10px] ${mD>0?'text-red-500':'text-green-500'}">${mD>0?'+':''}${mD}</span></td></tr>`;
+            let tD=0, cD=0, tM=0, states={};
+            uData.forEach(d => {
+                if(d.fechaResolucion && d.fechaCreacion) { tD += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion)/86400000); cD++; }
+                tM += d.movimientos;
+                states[d.detalleEstado] = (states[d.detalleEstado]||0)+1;
             });
+
+            document.getElementById('user-total').innerText = uData.length;
+            document.getElementById('user-ratio').innerHTML = `<span class="text-green-500">${aprob}</span> / <span class="text-red-500">${rech}</span>`;
+            document.getElementById('user-time').innerText = cD ? (tD/cD).toFixed(1)+'d' : '0d';
+            document.getElementById('user-moves').innerText = uData.length ? (tM/uData.length).toFixed(1) : '0';
+            document.getElementById('user-alerts').innerText = alerts;
+
+            // Chart
+            if(AppState.charts.uRes) AppState.charts.uRes.destroy();
+            AppState.charts.uRes = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(states), datasets: [{ data: Object.values(states), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
+
+            // Benchmark Table
+            const gStats = {};
+            AppState.resueltasData.forEach(d => {
+                if(!gStats[d.servicio]) gStats[d.servicio] = { t:0, c:0, m:0 };
+                if(d.fechaResolucion && d.fechaCreacion) { gStats[d.servicio].t += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion)/86400000); gStats[d.servicio].c++; }
+                gStats[d.servicio].m += d.movimientos;
+            });
+
+            const uStats = {};
+            uData.forEach(d => {
+                if(!uStats[d.servicio]) uStats[d.servicio] = { c:0, a:0, r:0, t:0, tc:0, m:0 };
+                uStats[d.servicio].c++; uStats[d.servicio].m += d.movimientos;
+                if(d.detalleEstado.toLowerCase().includes('aprob')) uStats[d.servicio].a++;
+                if(d.detalleEstado.toLowerCase().includes('rechaz')) uStats[d.servicio].r++;
+                if(d.fechaResolucion && d.fechaCreacion) { uStats[d.servicio].t += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion)/86400000); uStats[d.servicio].tc++; }
+            });
+
+            document.getElementById('user-benchmark-body').innerHTML = Object.keys(uStats).sort((a,b)=>uStats[b].c-uStats[a].c).map(serv => {
+                const s = uStats[serv];
+                const g = gStats[serv];
+                const ut = s.tc ? (s.t/s.tc) : 0; const um = s.c ? (s.m/s.c) : 0;
+                const gt = g && g.c ? (g.t/g.c) : 0; const gm = g && g.c ? (g.m/g.c) : 0;
+                
+                const td = gt ? (ut-gt).toFixed(1) : 0; const md = gm ? (um-gm).toFixed(1) : 0;
+                const tCol = td > 0 ? 'text-red-500' : 'text-green-500';
+                const mCol = md > 0 ? 'text-orange-500' : 'text-green-500';
+
+                return `<tr class="border-b"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center">${s.c}</td><td class="p-3 text-center text-xs"><span class="text-green-500 font-bold">${s.a}</span> - <span class="text-red-500 font-bold">${s.r}</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${ut.toFixed(1)}d</span> <span class="text-[10px] ${tCol}">${td>0?'+':''}${td} vs Sede</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${um.toFixed(1)}</span> <span class="text-[10px] ${mCol}">${md>0?'+':''}${md} vs Sede</span></td></tr>`;
+            }).join('');
         };
 
-        function drawMainCharts(allData, resueltas) {
-            const sC = {}; resueltas.forEach(d => { sC[d.servicio] = (sC[d.servicio]||0)+1; }); const tS = Object.entries(sC).sort((a,b)=>b[1]-a[1]).slice(0,5);
-            if(AppState.charts.pieServices) AppState.charts.pieServices.destroy(); AppState.charts.pieServices = new Chart(document.getElementById('chartPieServices'), { type: 'pie', data: { labels: tS.map(s=>s[0]), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'bottom'}} } });
-            
-            const aC = {}; resueltas.forEach(d => { const st = d.detalleEstado||'S/I'; aC[st] = (aC[st]||0)+1; });
-            if(AppState.charts.resolutionType) AppState.charts.resolutionType.destroy(); AppState.charts.resolutionType = new Chart(document.getElementById('chartResolutionType'), { type: 'doughnut', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#F59E0B','#6B7280','#3B82F6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'right'}} } });
-            
-            const stC = {}; resueltas.forEach(d => { if(d.propietario!=='No Asignado') stC[d.propietario] = (stC[d.propietario]||0)+1; }); const topSt = Object.entries(stC).sort((a,b)=>b[1]-a[1]).slice(0,7);
-            if(AppState.charts.barStaff) AppState.charts.barStaff.destroy(); AppState.charts.barStaff = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ label: 'Resueltas', data: topSt.map(s=>s[1]), backgroundColor: '#FBB03B' }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}} } });
-        }
+        function drawMainCharts(all, res) {
+            Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563';
+            Chart.defaults.font.family = 'Inter';
 
-        function drawAlertsCharts() {
-            const aT = {}; const sA = {}; AppState.alertsData.forEach(d => { d.alerts.forEach(a => { aT[a.tipo]=(aT[a.tipo]||0)+1; }); if(d.propietario!=='No Asignado') sA[d.propietario]=(sA[d.propietario]||0)+d.alerts.length; });
-            if(AppState.charts.alertsByType) AppState.charts.alertsByType.destroy(); AppState.charts.alertsByType = new Chart(document.getElementById('chartAlertsByType'), { type: 'pie', data: { labels: Object.keys(aT), datasets: [{ data: Object.values(aT), backgroundColor: ['#EF4444','#F59E0B','#8B5CF6','#EAB308','#EC4899'] }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}} });
-            const sS = Object.entries(sA).sort((a,b)=>b[1]-a[1]).slice(0,10);
-            if(AppState.charts.alertsByStaff) AppState.charts.alertsByStaff.destroy(); AppState.charts.alertsByStaff = new Chart(document.getElementById('chartAlertsByStaff'), { type: 'bar', data: { labels: sS.map(s=>s[0].split(' ')[0]), datasets: [{ data: sS.map(s=>s[1]), backgroundColor: '#EF4444' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}} });
-        }
+            // Top Servicios
+            const sC = {}; res.forEach(d => sC[d.servicio] = (sC[d.servicio]||0)+1);
+            const tS = Object.entries(sC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            if(AppState.charts.pS) AppState.charts.pS.destroy();
+            AppState.charts.pS = new Chart(document.getElementById('chartPieServices'), { type: 'doughnut', data: { labels: tS.map(s=>s[0].substring(0,15)), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels:{boxWidth:10, font:{size:10}} } } } });
 
-        function drawMovementsCharts(allData) {
-            const sS = {}; const stS = {}; allData.forEach(d => { if(!sS[d.servicio]) sS[d.servicio]={m:0,c:0}; sS[d.servicio].m+=d.movimientos; sS[d.servicio].c++; if(d.propietario!=='No Asignado'){ if(!stS[d.propietario]) stS[d.propietario]={m:0,c:0}; stS[d.propietario].m+=d.movimientos; stS[d.propietario].c++; } });
-            const topS = Object.entries(sS).map(([n,d])=>({n,a:d.m/d.c})).sort((a,b)=>b.a-a.a).slice(0,5);
-            if(AppState.charts.movementsByService) AppState.charts.movementsByService.destroy(); AppState.charts.movementsByService = new Chart(document.getElementById('chartMovementsByService'), { type:'bar', data: { labels: topS.map(s=>s.n.substring(0,15)), datasets: [{ data: topS.map(s=>s.a), backgroundColor: '#F97316' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}} });
-            const topSt = Object.entries(stS).filter(([n,d])=>d.c>=3).map(([n,d])=>({n,a:d.m/d.c})).sort((a,b)=>b.a-a.a).slice(0,10);
-            if(AppState.charts.movementsByStaff) AppState.charts.movementsByStaff.destroy(); AppState.charts.movementsByStaff = new Chart(document.getElementById('chartMovementsByStaff'), { type:'bar', data: { labels: topSt.map(s=>s.n.split(' ')[0]), datasets: [{ data: topSt.map(s=>s.a), backgroundColor: '#FB923C' }] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}} });
+            // Resolucion
+            const aC = {}; res.forEach(d => aC[d.detalleEstado] = (aC[d.detalleEstado]||0)+1);
+            if(AppState.charts.rT) AppState.charts.rT.destroy();
+            AppState.charts.rT = new Chart(document.getElementById('chartResolutionType'), { type: 'pie', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{boxWidth:10, font:{size:10}} } } } });
+
+            // Staff Bar
+            const stC = {}; res.forEach(d => { if(d.propietario!=='Sin Asignar') stC[d.propietario] = (stC[d.propietario]||0)+1; });
+            const topSt = Object.entries(stC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+            if(AppState.charts.bS) AppState.charts.bS.destroy();
+            AppState.charts.bS = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ data: topSt.map(s=>s[1]), backgroundColor: '#00274B', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.05)'}}} } });
+
+            // Movements
+            const mServ = {}; const mStaff = {};
+            all.forEach(d => {
+                if(!mServ[d.servicio]) mServ[d.servicio] = { m:0, c:0 }; mServ[d.servicio].m += d.movimientos; mServ[d.servicio].c++;
+                if(d.propietario!=='Sin Asignar') { if(!mStaff[d.propietario]) mStaff[d.propietario] = { m:0, c:0 }; mStaff[d.propietario].m += d.movimientos; mStaff[d.propietario].c++; }
+            });
+
+            const tsM = Object.entries(mServ).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,5);
+            if(AppState.charts.mS) AppState.charts.mS.destroy();
+            AppState.charts.mS = new Chart(document.getElementById('chartMovementsByService'), { type: 'bar', data: { labels: tsM.map(s=>s.n.substring(0,15)), datasets: [{ data: tsM.map(s=>s.v), backgroundColor: '#F97316', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+
+            const tuM = Object.entries(mStaff).filter(x=>x[1].c>2).map(x=>({n:x[0], v:x[1].m/x[1].c})).sort((a,b)=>b.v-a.v).slice(0,10);
+            if(AppState.charts.mU) AppState.charts.mU.destroy();
+            AppState.charts.mU = new Chart(document.getElementById('chartMovementsByStaff'), { type: 'bar', data: { labels: tuM.map(s=>s.n.split(' ')[0]), datasets: [{ data: tuM.map(s=>s.v), backgroundColor: '#FB923C', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
     </script>
 </body>
