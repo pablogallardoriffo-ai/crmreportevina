@@ -52,7 +52,7 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Resaltados de texto para auditoría */
+        /* Resaltados de texto para auditoría (Multicolores) */
         .highlight-red { background-color: #fecaca; color: #991b1b; padding: 0 4px; border-radius: 4px; font-weight: 600; }
         .highlight-purple { background-color: #e9d5ff; color: #6b21a8; padding: 0 4px; border-radius: 4px; font-weight: 600; }
         .highlight-pink { background-color: #fbcfe8; color: #9d174d; padding: 0 4px; border-radius: 4px; font-weight: 600; }
@@ -92,7 +92,7 @@
     <!-- Área Principal -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         
-        <!-- Topbar Estilo Duoc (Imagen Referencia) -->
+        <!-- Topbar Estilo Duoc -->
         <header class="bg-duoc-blue text-white shadow-md px-8 py-4 flex justify-between items-center z-10 flex-shrink-0">
             <div>
                 <p class="text-xs font-semibold text-duoc-yellow uppercase tracking-wider mb-1">Coordinación Docente - Sede Viña del Mar</p>
@@ -197,8 +197,8 @@
                             <h3 id="user-total" class="font-display text-3xl font-black text-duoc-blue">0</h3>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
-                            <p class="text-xs text-gray-500 font-bold uppercase">Aprobación</p>
-                            <h3 id="user-ratio" class="font-display text-2xl font-black mt-1">0%</h3>
+                            <p class="text-xs text-gray-500 font-bold uppercase">Aprob / Rechaz</p>
+                            <h3 id="user-ratio" class="font-display text-2xl font-black mt-1">0 / 0</h3>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm text-center">
                             <p class="text-xs text-gray-500 font-bold uppercase">Tiem. Promedio</p>
@@ -247,7 +247,7 @@
                         <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500 mt-1"></i>
                         <div>
                             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Motor de Alertas Críticas y Ortografía</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">El algoritmo analiza semánticamente el texto del alumno y la respuesta del funcionario buscando 6 patrones de riesgo. Omite tildes para mayor precisión en faltas ortográficas.</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">El algoritmo analiza semánticamente el texto del alumno y la respuesta del funcionario buscando 6 patrones de riesgo. Se destaca la palabra clave en el texto.</p>
                             <div class="flex flex-wrap gap-2 mt-3">
                                 <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded">1. Deserción Oculta</span>
                                 <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded">2. Rechazo sin Justificar</span>
@@ -322,8 +322,7 @@
     <script>
         const AppState = { resueltasData: [], activasData: [], alertsData: [], charts: {} };
 
-        // Diccionario de ortografía sin tildes para la validación
-        // Clave: Palabra mal escrita (sin tildes). Valor: Corrección ideal.
+        // Diccionario de ortografía sin tildes para la validación de funcionarios
         const dictionaryMistakes = {
             "haci": "así", "haiga": "haya", "iva": "iba", "hir": "ir",
             "acer": "hacer", "aber": "haber", "desicion": "decisión", "decicion": "decisión",
@@ -332,7 +331,8 @@
             "hize": "hice", "valla": "vaya", "alluda": "ayuda", "asta": "hasta",
             "asiendo": "haciendo", "boy": "voy", "aser": "hacer", "habrir": "abrir",
             "hiba": "iba", "hacerlo": "hacerlo", "nesecario": "necesario", "preveer": "prever",
-            "bacia": "vacía", "bacio": "vacío", "hechar": "echar", "llendo": "yendo"
+            "bacia": "vacía", "bacio": "vacío", "hechar": "echar", "llendo": "yendo",
+            "dijieron": "dijeron", "fuistes": "fuiste", "trajistes": "trajiste"
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -340,8 +340,6 @@
                 e.target.checked ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
                 updateDashboards();
             });
-            // Init con mockup basico
-            updateDashboards();
         });
 
         function switchTab(targetId) {
@@ -357,7 +355,7 @@
             });
         }
 
-        // Lector de Archivos: Anti-Hang implementando lectura por índice exacto
+        // --- LECTURA ROBUSTA DE EXCEL MEDIANTE ARRAY DIRECTO ---
         function handleFileUpload(event, type) {
             const file = event.target.files[0];
             if (!file) return;
@@ -372,33 +370,34 @@
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // LECTURA DIRECTA POR ARRAY: Evita problemas de nombres de columnas largos
+                    // LECTURA DIRECTA POR ARRAY: Evita cuelgues por encabezados largos o vacíos
+                    // header: 1 devuelve arrays anidados, saltando la estructura de diccionario que causa loops infinitos.
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
                     
                     if(rows.length < 2) throw new Error("Archivo sin datos");
 
                     const processedData = [];
-                    // Saltamos la fila 0 (Cabeceras)
+                    // Saltamos la fila 0 (Cabeceras). Si hay más filas de basura arriba, el "if(!r[3])" las salta.
                     for (let i = 1; i < rows.length; i++) {
                         const r = rows[i];
-                        if (!r[3]) continue; // Si no hay ID de solicitud (Col D = Index 3), ignorar
+                        // Verificamos que la fila exista y que la Columna D tenga un identificador válido
+                        if (!r || !r[3] || String(r[3]).includes('Número') || String(r[3]).includes('Solicitud')) continue;
                         
-                        // Parseo seguro de Fechas
                         const parseDate = (val) => val ? (val instanceof Date ? val : new Date(val)) : null;
 
                         let obj = {
-                            id: String(r[3]),                           // Col D
-                            servicio: String(r[5] || 'General'),        // Col F
-                            estudiante: String(r[9] || 'Sin Nombre'),   // Col J
-                            descripcion: String(r[10] || ''),           // Col K
-                            propietario: String(r[11] || 'Sin Asignar'),// Col L
+                            id: String(r[3] || 'S/N'),                  // Col D (0-index: 3)
+                            servicio: String(r[5] || 'General'),        // Col F (0-index: 5)
+                            estudiante: String(r[9] || 'Sin Nombre'),   // Col J (0-index: 9)
+                            descripcion: String(r[10] || ''),           // Col K (0-index: 10)
+                            propietario: String(r[11] || 'Sin Asignar'),// Col L (0-index: 11)
                             estado: String(r[12] || (type === 'activas' ? 'En proceso' : 'Resuelto')), // Col M
                             fechaCreacion: parseDate(r[13]),            // Col N
                             fechaResolucion: parseDate(r[14]),          // Col O
                             carrera: String(r[15] || ''),               // Col P
-                            detalleEstado: String(r[27] || ''),         // Col AB
-                            resolucion: String(r[28] || ''),            // Col AC
-                            movimientos: parseInt(r[32]) || 0,          // Col AG
+                            detalleEstado: String(r[27] || ''),         // Col AB (0-index: 27)
+                            resolucion: String(r[28] || ''),            // Col AC (0-index: 28)
+                            movimientos: parseInt(r[32]) || 0,          // Col AG (0-index: 32)
                             type: type
                         };
                         
@@ -420,7 +419,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Motor Inteligente de Alertas y Faltas de Ortografía
+        // --- MOTOR INTELIGENTE DE ALERTAS Y ORTOGRAFÍA ---
         function detectAlerts(d) {
             let alerts = [];
             const descOrig = d.descripcion || '';
@@ -432,8 +431,10 @@
             const estadoDetalle = (d.detalleEstado || '').toLowerCase();
 
             // 1. Deserción Oculta
-            if (serv.includes('SUSPENSION') && (desc.includes('renuncia') || desc.includes('retiro') || desc.includes('baja'))) {
-                alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border border-red-300', matchTarget: 'desc', matchWords: ['renuncia', 'retiro', 'baja'] });
+            const deserKeywords = ['renuncia', 'retiro', 'baja'];
+            let deserMatched = deserKeywords.filter(k => desc.includes(k));
+            if (serv.includes('SUSPENSION') && deserMatched.length > 0) {
+                alerts.push({ tipo: 'Deserción Oculta', clase: 'bg-red-100 text-red-800 border border-red-300', matchTarget: 'desc', matchWords: deserMatched });
             }
 
             // 2. Rechazo Injustificado
@@ -445,39 +446,34 @@
 
             // 3. Riesgo Legal
             const legalKeywords = ['sernac', 'demanda', 'abogado', 'estafa', 'ministerio', 'superintendencia'];
-            let legalMatched = legalKeywords.find(k => desc.includes(k));
-            if (legalMatched) {
-                alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border border-purple-300', matchTarget: 'desc', matchWords: [legalMatched] });
+            let legalMatched = legalKeywords.filter(k => desc.includes(k));
+            if (legalMatched.length > 0) {
+                alerts.push({ tipo: 'Riesgo Legal / Reclamo', clase: 'bg-purple-100 text-purple-800 border border-purple-300', matchTarget: 'desc', matchWords: legalMatched });
             }
 
             // 4. Duda Financiera
             const finKeywords = ['gratuidad', 'cae', 'beca', 'cobro indebido'];
-            let finMatched = finKeywords.find(k => desc.includes(k));
-            if (finMatched && !serv.includes('ARANCEL') && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
-                alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border border-yellow-300', matchTarget: 'desc', matchWords: [finMatched] });
+            let finMatched = finKeywords.filter(k => desc.includes(k));
+            if (finMatched.length > 0 && !serv.includes('ARANCEL') && !serv.includes('FINANCIERO') && !serv.includes('PAGO')) {
+                alerts.push({ tipo: 'Duda Financiera Oculta', clase: 'bg-yellow-100 text-yellow-800 border border-yellow-300', matchTarget: 'desc', matchWords: finMatched });
             }
 
-            // 5. Quejas Personal
-            const quejasKws = ['flojo', 'mala atencion', 'pesimo', 'se demora', 'no responde', 'mucho tiempo', 'ninguna respuesta', 'cero empatia', 'me tramitan', 'falta de respeto', 'maltrato'];
-            let quejaMatched = quejasKws.find(k => desc.includes(k));
-            if (quejaMatched) {
-                alerts.push({ tipo: 'Queja hacia Personal', clase: 'bg-pink-100 text-pink-800 border border-pink-300', matchTarget: 'desc', matchWords: [quejaMatched] });
+            // 5. Quejas Personal (Ampliado)
+            const quejasKws = ['flojo', 'mala atencion', 'pesimo', 'se demora', 'se demoraron', 'no responde', 'mucho tiempo', 'ninguna respuesta', 'cero empatia', 'me tramitan', 'falta de respeto', 'maltrato', 'decepcionante'];
+            let quejaMatched = quejasKws.filter(k => desc.includes(k));
+            if (quejaMatched.length > 0) {
+                alerts.push({ tipo: 'Queja hacia Personal', clase: 'bg-pink-100 text-pink-800 border border-pink-300', matchTarget: 'desc', matchWords: quejaMatched });
             }
 
-            // 6. Ortografía Funcionario (Sin tildes, sin diccionarios externos)
+            // 6. Ortografía Funcionario (Ignora tildes en el mapeo)
             if (resOrig.trim().length > 0) {
-                // Función nativa para quitar acentos
                 const removeAccents = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 const normalizedRes = removeAccents(resOrig);
                 
-                // Dividir en palabras ignorando puntuación
                 const words = normalizedRes.split(/[\s,.;:!?()"]+/);
-                
                 let foundMistakes = [];
                 words.forEach(w => {
-                    if (dictionaryMistakes[w]) {
-                        foundMistakes.push(w); // Guardamos la palabra tal como fue encontrada (sin tilde) para buscarla luego
-                    }
+                    if (dictionaryMistakes[w]) foundMistakes.push(w);
                 });
 
                 if (foundMistakes.length > 0) {
@@ -485,7 +481,7 @@
                         tipo: 'Ortografía Funcionario', 
                         clase: 'bg-cyan-100 text-cyan-800 border border-cyan-400', 
                         matchTarget: 'res', 
-                        matchWords: [...new Set(foundMistakes)] // Palabras sin tilde detectadas
+                        matchWords: [...new Set(foundMistakes)]
                     });
                 }
             }
@@ -493,15 +489,15 @@
             return alerts;
         }
 
+        // --- ACTUALIZAR PANELES Y KPIs ---
         function updateDashboards() {
             const allData = [...AppState.resueltasData, ...AppState.activasData];
             if(allData.length === 0) return;
 
             const resueltas = AppState.resueltasData;
             
-            // KPIs
             const aprobadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('aprob')).length;
-            const rechazadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('rechaz')).length;
+            const rechazadas = resueltas.filter(d => d.detalleEstado.toLowerCase().includes('rechaz') || d.detalleEstado.toLowerCase().includes('cancel')).length;
             
             let totalD = 0, countD = 0, totalM = 0;
             resueltas.forEach(d => {
@@ -518,7 +514,6 @@
             document.getElementById('kpi-time').innerText = countD ? (totalD/countD).toFixed(1)+' d' : '0 d';
             document.getElementById('kpi-moves').innerText = resueltas.length ? (totalM/resueltas.length).toFixed(1) : '0';
 
-            // Alertas y vistas
             AppState.alertsData = allData.filter(d => d.alerts.length > 0);
             renderAlertsView();
             renderMovementsTable(allData);
@@ -528,6 +523,7 @@
             if(!document.getElementById('user-stats-container').classList.contains('hidden')) updateUserAnalysis();
         }
 
+        // --- RENDERIZAR TABLA DE ALERTAS CON RESALTADOS ---
         window.renderAlertsView = function() {
             const filter = document.getElementById('filter-alert-type').value;
             const tbody = document.getElementById('table-alerts-body');
@@ -541,26 +537,23 @@
 
                 const badges = alertsToProcess.map(a => `<span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] ${a.clase}">${a.tipo}</span>`).join('<br>');
                 
-                // Procesamiento de Resaltado para Descripción (Alumno)
+                // Procesamiento Resaltado Descripción (Alumno)
                 let textDesc = d.descripcion ? `"${d.descripcion}"` : '-';
                 alertsToProcess.forEach(a => {
                     if (a.matchTarget === 'desc' && a.matchWords) {
                         a.matchWords.forEach(w => {
-                            const regex = new RegExp(`(${w})`, 'gi');
+                            const regex = new RegExp(`\\b(${w})\\b`, 'gi');
                             let cls = a.tipo.includes('Legal') ? 'highlight-purple' : (a.tipo.includes('Queja') ? 'highlight-pink' : (a.tipo.includes('Financiera') ? 'highlight-yellow' : 'highlight-red'));
                             textDesc = textDesc.replace(regex, `<span class="${cls}">$1</span>`);
                         });
                     }
                 });
 
-                // Procesamiento de Resaltado para Resolución (Funcionario) - Ignorando Tildes en la busqueda
+                // Procesamiento Resaltado Resolución (Funcionario) - Ortografía
                 let textRes = d.resolucion ? `"${d.resolucion}"` : '<span class="italic text-gray-400">Sin texto</span>';
                 alertsToProcess.forEach(a => {
                     if (a.matchTarget === 'res' && a.matchWords) {
                         a.matchWords.forEach(w => {
-                            // Buscar la palabra original en el texto real.
-                            // Como la palabra 'w' está sin tilde (ej: 'haci'), y el texto real puede tenerla o no (ej 'Hací'), 
-                            // construimos un regex manual que tolere tildes en vocales para encontrar la palabra en el string original.
                             let regexStr = w.split('').map(char => {
                                 if(char === 'a') return '[aáAÁ]'; if(char === 'e') return '[eéEÉ]';
                                 if(char === 'i') return '[iíIÍ]'; if(char === 'o') return '[oóOÓ]';
@@ -583,7 +576,7 @@
             });
         }
 
-        // Tabla Movimientos
+        // --- RENDERIZAR TABLA DE MOVIMIENTOS ---
         function renderMovementsTable(data) {
             const tbody = document.getElementById('table-movements-body');
             const sorted = data.filter(d => d.movimientos >= 3).sort((a,b) => b.movimientos - a.movimientos);
@@ -599,7 +592,7 @@
             `).join('');
         }
 
-        // Colaboradores
+        // --- ANÁLISIS DE COLABORADORES (BENCHMARK) ---
         function populateUsers(data) {
             const select = document.getElementById('user-select');
             const val = select.value;
@@ -618,7 +611,7 @@
             const alerts = AppState.alertsData.filter(d => d.propietario === user).length;
 
             const aprob = uData.filter(d => d.detalleEstado.toLowerCase().includes('aprob')).length;
-            const rech = uData.filter(d => d.detalleEstado.toLowerCase().includes('rechaz')).length;
+            const rech = uData.filter(d => d.detalleEstado.toLowerCase().includes('rechaz') || d.detalleEstado.toLowerCase().includes('cancel')).length;
             
             let tD=0, cD=0, tM=0, states={};
             uData.forEach(d => {
@@ -633,11 +626,9 @@
             document.getElementById('user-moves').innerText = uData.length ? (tM/uData.length).toFixed(1) : '0';
             document.getElementById('user-alerts').innerText = alerts;
 
-            // Chart
             if(AppState.charts.uRes) AppState.charts.uRes.destroy();
             AppState.charts.uRes = new Chart(document.getElementById('chartUserResolution'), { type: 'doughnut', data: { labels: Object.keys(states), datasets: [{ data: Object.values(states), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
 
-            // Benchmark Table
             const gStats = {};
             AppState.resueltasData.forEach(d => {
                 if(!gStats[d.servicio]) gStats[d.servicio] = { t:0, c:0, m:0 };
@@ -650,46 +641,41 @@
                 if(!uStats[d.servicio]) uStats[d.servicio] = { c:0, a:0, r:0, t:0, tc:0, m:0 };
                 uStats[d.servicio].c++; uStats[d.servicio].m += d.movimientos;
                 if(d.detalleEstado.toLowerCase().includes('aprob')) uStats[d.servicio].a++;
-                if(d.detalleEstado.toLowerCase().includes('rechaz')) uStats[d.servicio].r++;
+                if(d.detalleEstado.toLowerCase().includes('rechaz') || d.detalleEstado.toLowerCase().includes('cancel')) uStats[d.servicio].r++;
                 if(d.fechaResolucion && d.fechaCreacion) { uStats[d.servicio].t += Math.ceil(Math.abs(d.fechaResolucion - d.fechaCreacion)/86400000); uStats[d.servicio].tc++; }
             });
 
             document.getElementById('user-benchmark-body').innerHTML = Object.keys(uStats).sort((a,b)=>uStats[b].c-uStats[a].c).map(serv => {
-                const s = uStats[serv];
-                const g = gStats[serv];
+                const s = uStats[serv]; const g = gStats[serv];
                 const ut = s.tc ? (s.t/s.tc) : 0; const um = s.c ? (s.m/s.c) : 0;
                 const gt = g && g.c ? (g.t/g.c) : 0; const gm = g && g.c ? (g.m/g.c) : 0;
                 
                 const td = gt ? (ut-gt).toFixed(1) : 0; const md = gm ? (um-gm).toFixed(1) : 0;
-                const tCol = td > 0 ? 'text-red-500' : 'text-green-500';
-                const mCol = md > 0 ? 'text-orange-500' : 'text-green-500';
+                const tCol = td > 0 ? 'text-red-500' : 'text-green-500'; const mCol = md > 0 ? 'text-orange-500' : 'text-green-500';
 
                 return `<tr class="border-b"><td class="p-3 font-medium text-xs">${serv}</td><td class="p-3 text-center">${s.c}</td><td class="p-3 text-center text-xs"><span class="text-green-500 font-bold">${s.a}</span> - <span class="text-red-500 font-bold">${s.r}</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${ut.toFixed(1)}d</span> <span class="text-[10px] ${tCol}">${td>0?'+':''}${td} vs Sede</span></td><td class="p-3 text-center bg-gray-50"><span class="font-bold">${um.toFixed(1)}</span> <span class="text-[10px] ${mCol}">${md>0?'+':''}${md} vs Sede</span></td></tr>`;
             }).join('');
         };
 
+        // --- GRÁFICOS PRINCIPALES ---
         function drawMainCharts(all, res) {
             Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563';
             Chart.defaults.font.family = 'Inter';
 
-            // Top Servicios
             const sC = {}; res.forEach(d => sC[d.servicio] = (sC[d.servicio]||0)+1);
             const tS = Object.entries(sC).sort((a,b)=>b[1]-a[1]).slice(0,5);
             if(AppState.charts.pS) AppState.charts.pS.destroy();
             AppState.charts.pS = new Chart(document.getElementById('chartPieServices'), { type: 'doughnut', data: { labels: tS.map(s=>s[0].substring(0,15)), datasets: [{ data: tS.map(s=>s[1]), backgroundColor: ['#00274B','#003A6E','#00B2E3','#FBB03B','#E59B28'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels:{boxWidth:10, font:{size:10}} } } } });
 
-            // Resolucion
             const aC = {}; res.forEach(d => aC[d.detalleEstado] = (aC[d.detalleEstado]||0)+1);
             if(AppState.charts.rT) AppState.charts.rT.destroy();
             AppState.charts.rT = new Chart(document.getElementById('chartResolutionType'), { type: 'pie', data: { labels: Object.keys(aC), datasets: [{ data: Object.values(aC), backgroundColor: ['#10B981','#EF4444','#FBB03B','#6B7280'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{boxWidth:10, font:{size:10}} } } } });
 
-            // Staff Bar
             const stC = {}; res.forEach(d => { if(d.propietario!=='Sin Asignar') stC[d.propietario] = (stC[d.propietario]||0)+1; });
             const topSt = Object.entries(stC).sort((a,b)=>b[1]-a[1]).slice(0,6);
             if(AppState.charts.bS) AppState.charts.bS.destroy();
             AppState.charts.bS = new Chart(document.getElementById('chartBarStaff'), { type: 'bar', data: { labels: topSt.map(s=>s[0].split(' ')[0]), datasets: [{ data: topSt.map(s=>s[1]), backgroundColor: '#00274B', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.05)'}}} } });
 
-            // Movements
             const mServ = {}; const mStaff = {};
             all.forEach(d => {
                 if(!mServ[d.servicio]) mServ[d.servicio] = { m:0, c:0 }; mServ[d.servicio].m += d.movimientos; mServ[d.servicio].c++;
